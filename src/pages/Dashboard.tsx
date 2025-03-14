@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import ScholarshipCard from "@/components/ScholarshipCard";
+import MessageModal from "@/components/MessageModal";
 
 const mockScholarships = [
   {
@@ -84,7 +85,9 @@ const Dashboard = () => {
   const [userType, setUserType] = useState<"student" | "sponsor">("student");
   const userWalletAddress = "0x71C7656EC7ab88b098defB751B7401B5f6d8976F";
   const userName = "Alex Johnson";
-  
+  const [showMessageDetails, setShowMessageDetails] = useState(false);
+  const selectedMessage = "This is a sample message";
+
   const handleLogout = () => {
     toast({
       title: "Logged Out",
@@ -934,6 +937,12 @@ const Dashboard = () => {
               </div>
             </div>
           )}
+          
+          <MessageModal
+            message={selectedMessage}
+            isOpen={showMessageDetails}
+            onClose={() => setShowMessageDetails(false)}
+          />
         </main>
       </div>
     </div>

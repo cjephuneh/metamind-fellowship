@@ -1,11 +1,23 @@
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowRight, BookOpen, CheckCircle, MessageCircle, Shield, Sparkles } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useWallet } from "@/context/WalletContext";
 
 const Index = () => {
   const { toast } = useToast();
+  const { isConnected } = useWallet();
+  const navigate = useNavigate();
+  
+  const handleExploreClick = () => {
+    if (isConnected) {
+      navigate("/dashboard");
+    } else {
+      navigate("/connect");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-slate-50">
@@ -16,12 +28,13 @@ const Index = () => {
           <h1 className="text-xl font-bold">MetaMind Fellowship</h1>
         </div>
         <div className="flex gap-4 items-center">
-          <Link to="/scholarships" className="text-sm font-medium hover:text-purple-500 transition-colors">
-            Explore
-          </Link>
-          <Link to="/how-it-works" className="text-sm font-medium hover:text-purple-500 transition-colors">
-            How it Works
-          </Link>
+          <Button 
+            variant="ghost" 
+            className="text-sm font-medium hover:text-purple-500 transition-colors"
+            onClick={handleExploreClick}
+          >
+            Explore Scholarships
+          </Button>
           <Link to="/dashboard">
             <Button variant="outline" size="sm" className="hidden sm:flex">
               Dashboard
@@ -43,16 +56,21 @@ const Index = () => {
             Connect your MetaMask wallet to apply for scholarships or fund the next generation of innovators.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/apply">
-              <Button size="lg" className="bg-purple-500 hover:bg-purple-600 w-full sm:w-auto">
-                Apply for Funding <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
-            <Link to="/sponsor">
-              <Button size="lg" variant="outline" className="w-full sm:w-auto">
-                Become a Sponsor
-              </Button>
-            </Link>
+            <Button 
+              size="lg" 
+              className="bg-purple-500 hover:bg-purple-600 w-full sm:w-auto"
+              onClick={() => navigate("/connect")}
+            >
+              Apply for Funding <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+            <Button 
+              size="lg" 
+              variant="outline" 
+              className="w-full sm:w-auto"
+              onClick={() => navigate("/register")}
+            >
+              Become a Sponsor
+            </Button>
           </div>
         </div>
       </section>
@@ -111,10 +129,12 @@ const Index = () => {
               <span className="font-semibold">MetaMind Fellowship</span>
             </div>
             <div className="flex gap-8">
-              <Link to="/about" className="text-sm text-gray-500 hover:text-purple-500">About</Link>
-              <Link to="/privacy" className="text-sm text-gray-500 hover:text-purple-500">Privacy</Link>
-              <Link to="/terms" className="text-sm text-gray-500 hover:text-purple-500">Terms</Link>
-              <Link to="/contact" className="text-sm text-gray-500 hover:text-purple-500">Contact</Link>
+              <Link to="/dashboard" className="text-sm text-gray-500 hover:text-purple-500">Dashboard</Link>
+              <Link to="/connect" className="text-sm text-gray-500 hover:text-purple-500">Connect Wallet</Link>
+              <Link to="/register" className="text-sm text-gray-500 hover:text-purple-500">Register</Link>
+              <Button variant="link" className="text-sm text-gray-500 hover:text-purple-500 p-0 h-auto" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+                Back to Top
+              </Button>
             </div>
           </div>
           <div className="mt-8 text-center text-sm text-gray-500">
