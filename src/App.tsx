@@ -13,7 +13,6 @@ import ConnectWallet from "./pages/ConnectWallet";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import ScholarshipDetail from "./pages/ScholarshipDetail";
-import ApplyForGrant from "./pages/ApplyForGrant";
 
 const queryClient = new QueryClient();
 
@@ -36,12 +35,11 @@ const App = () => {
         <BrowserRouter>
           <WalletProvider>
             <Routes>
-              <Route path="/" element={<Index openAIApiKey={openAIApiKey} setOpenAIApiKey={setOpenAIApiKey} />} />
+              <Route path="/" element={<Index />} />
               <Route path="/connect" element={<ConnectWallet />} />
               <Route path="/register" element={<Register />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/scholarships/:id" element={<ScholarshipDetail />} />
-              <Route path="/apply" element={<ApplyForGrant />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
