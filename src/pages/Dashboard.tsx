@@ -23,6 +23,8 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import ScholarshipCard from "@/components/ScholarshipCard";
+import { useWallet } from "@/context/WalletContext";
+import MessageModal from "@/components/MessageModal";
 
 const mockScholarships = [
   {
@@ -78,14 +80,50 @@ const mockApplications = [
   }
 ];
 
+const mockMessages = [
+  {
+    id: "msg1",
+    sender: {
+      name: "Future Tech Foundation",
+      walletAddress: "0x3a2d3b45C67A98df234B21399E8ee9C",
+      avatar: ""
+    },
+    recipient: {
+      name: "Alex Johnson",
+      walletAddress: "0x71C7656EC7ab88b098defB751B7401B5f6d8976F"
+    },
+    content: "Thank you for your interest in our scholarship program. Your application has been received and is currently under review. We will notify you of any updates.",
+    timestamp: new Date(2023, 5, 15, 10, 30),
+    read: false
+  },
+  {
+    id: "msg2",
+    sender: {
+      name: "Diversity in Tech Alliance",
+      walletAddress: "0x8b34c91A53D7e4eC45C67Ae1234c5d6",
+      avatar: ""
+    },
+    recipient: {
+      name: "Alex Johnson",
+      walletAddress: "0x71C7656EC7ab88b098defB751B7401B5f6d8976F"
+    },
+    content: "We've reviewed your application for the Women in STEM Scholarship and we're pleased to inform you that you've been selected as a recipient! Please check your dashboard for next steps.",
+    timestamp: new Date(2023, 5, 10, 14, 45),
+    read: true
+  }
+];
+
 const Dashboard = () => {
   const { toast } = useToast();
+  const { userType, account, disconnectWallet } = useWallet();
   const [activeTab, setActiveTab] = useState("overview");
-  const [userType, setUserType] = useState<"student" | "sponsor">("student");
-  const userWalletAddress = "0x71C7656EC7ab88b098defB751B7401B5f6d8976F";
+  const [selectedMessage, setSelectedMessage] = useState<typeof mockMessages[0] | null>(null);
+  const [showMessageDetails, setShowMessageDetails] = useState(false);
+  
   const userName = "Alex Johnson";
   
   const handleLogout = () => {
+    disconnectWallet();
     toast({
       title: "Logged Out",
       description: "You've been successfully logged out.",
@@ -95,30 +133,13 @@ const Dashboard = () => {
     }, 1500);
   };
 
+  const handleViewMessageDetails = (message: typeof mockMessages[0]) => {
+    setSelectedMessage(message);
+    setShowMessageDetails(true);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      <div className="fixed top-4 right-4 z-50 bg-white rounded-md shadow-md p-2">
-        <div className="flex items-center gap-2 text-xs">
-          <span>View as:</span>
-          <Button 
-            variant={userType === "student" ? "default" : "outline"} 
-            size="sm"
-            onClick={() => setUserType("student")}
-            className={userType === "student" ? "bg-purple-600 text-white" : ""}
-          >
-            Student
-          </Button>
-          <Button 
-            variant={userType === "sponsor" ? "default" : "outline"} 
-            size="sm"
-            onClick={() => setUserType("sponsor")}
-            className={userType === "sponsor" ? "bg-purple-600 text-white" : ""}
-          >
-            Sponsor
-          </Button>
-        </div>
-      </div>
-      
       <div className="hidden md:flex w-64 flex-col fixed inset-y-0 bg-white border-r border-gray-200 shadow-sm">
         <div className="flex items-center h-16 gap-2 px-6 border-b bg-gradient-to-r from-purple-500 to-purple-700 text-white">
           <Sparkles className="h-5 w-5" />
@@ -247,7 +268,7 @@ const Dashboard = () => {
             
             <div className="flex items-center px-3 py-2 text-sm font-medium text-gray-600">
               <Wallet className="mr-3 h-5 w-5" />
-              <span className="truncate">{userWalletAddress.slice(0, 6)}...{userWalletAddress.slice(-4)}</span>
+              <span className="truncate">{account ? `${account.slice(0, 6)}...${account.slice(-4)}` : "Not connected"}</span>
             </div>
             <button 
               onClick={handleLogout}
@@ -724,73 +745,36 @@ const Dashboard = () => {
                 Messages
               </h2>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[calc(100vh-200px)]">
-                <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
-                  <div className="p-3 border-b bg-gray-50">
-                    <h3 className="font-medium">Conversations</h3>
-                  </div>
-                  <div className="overflow-y-auto h-[calc(100%-50px)]">
-                    {[1, 2, 3, 4, 5].map(id => (
-                      <div key={id} className={`p-3 border-b hover:bg-gray-50 cursor-pointer ${id === 1 ? 'bg-purple-50' : ''}`}>
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                            <User className="h-5 w-5 text-purple-600" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex justify-between items-center">
-                              <span className="font-medium truncate">
-                                {id === 1 ? 'Future Tech Foundation' : id === 2 ? 'Diversity in Tech Alliance' : `Contact ${id}`}
-                              </span>
-                              <span className="text-xs text-gray-500">2h ago</span>
-                            </div>
-                            <p className="text-sm text-gray-500 truncate">Thank you for your interest in our scholarship program...</p>
-                          </div>
-                        </div>
+              <div className="space-y-4">
+                {mockMessages.map(message => (
+                  <Card key={message.id} className="hover:shadow-md transition-shadow">
+                    <CardHeader className="pb-2">
+                      <CardTitle>{message.sender.name}</CardTitle>
+                      <CardDescription>
+                        {message.timestamp.toLocaleDateString()} at {message.timestamp.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="pb-2">
+                      <p className="text-sm text-gray-600 line-clamp-2">{message.content}</p>
+                    </CardContent>
+                    <CardFooter>
+                      <div className="flex items-center justify-between w-full">
+                        <span className={`px-2 py-1 text-xs rounded-full ${
+                          message.read ? "bg-gray-100 text-gray-800" : "bg-blue-100 text-blue-800"
+                        }`}>
+                          {message.read ? "Read" : "Unread"}
+                        </span>
+                        <Button 
+                          size="sm" 
+                          className="bg-purple-500 hover:bg-purple-600"
+                          onClick={() => handleViewMessageDetails(message)}
+                        >
+                          View Details
+                        </Button>
                       </div>
-                    ))}
-                  </div>
-                </div>
-                
-                <div className="md:col-span-2 bg-white rounded-lg shadow-sm border flex flex-col">
-                  <div className="p-3 border-b bg-gray-50">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                        <User className="h-4 w-4 text-purple-600" />
-                      </div>
-                      <h3 className="font-medium">Future Tech Foundation</h3>
-                    </div>
-                  </div>
-                  
-                  <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                    <div className="flex justify-start">
-                      <div className="bg-gray-100 rounded-lg p-3 max-w-[70%]">
-                        <p className="text-sm">Hi there! Thanks for your interest in the Tech Innovation Grant. Do you have any questions about the application process?</p>
-                        <span className="text-xs text-gray-500 mt-1">10:30 AM</span>
-                      </div>
-                    </div>
-                    
-                    <div className="flex justify-end">
-                      <div className="bg-purple-100 rounded-lg p-3 max-w-[70%]">
-                        <p className="text-sm">Yes, I was wondering about the eligibility requirements. Do I need to be a current student to apply?</p>
-                        <span className="text-xs text-gray-500 mt-1">10:35 AM</span>
-                      </div>
-                    </div>
-                    
-                    <div className="flex justify-start">
-                      <div className="bg-gray-100 rounded-lg p-3 max-w-[70%]">
-                        <p className="text-sm">Yes, you need to be currently enrolled in an accredited institution to be eligible. You'll need to provide proof of enrollment during the application process.</p>
-                        <span className="text-xs text-gray-500 mt-1">10:40 AM</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="p-3 border-t">
-                    <div className="flex gap-2">
-                      <input type="text" className="flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="Type your message..." />
-                      <Button className="bg-purple-500 hover:bg-purple-600">Send</Button>
-                    </div>
-                  </div>
-                </div>
+                    </CardFooter>
+                  </Card>
+                ))}
               </div>
             </div>
           )}
@@ -936,6 +920,12 @@ const Dashboard = () => {
           )}
         </main>
       </div>
+      
+      <MessageModal 
+        message={selectedMessage}
+        isOpen={showMessageDetails}
+        onClose={() => setShowMessageDetails(false)}
+      />
     </div>
   );
 };
