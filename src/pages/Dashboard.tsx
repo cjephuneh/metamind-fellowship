@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -23,7 +22,7 @@ import {
 import { Link } from "react-router-dom";
 import ScholarshipCard from "@/components/ScholarshipCard";
 import { useWallet } from "@/context/WalletContext";
-import MessageDetailModal, { Message } from "@/components/MessageDetailModal";
+import MessageDetailModal from "@/components/MessageDetailModal";
 
 const mockScholarships = [
   {
@@ -79,7 +78,6 @@ const mockApplications = [
   }
 ];
 
-// Mock conversation data
 const mockConversations = [
   {
     id: "conv1",
@@ -177,14 +175,14 @@ const mockConversations = [
 const Dashboard = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("overview");
-  const { userType, account, disconnect } = useWallet();
+  const { userType, account, disconnectWallet } = useWallet();
   const [selectedConversation, setSelectedConversation] = useState<typeof mockConversations[0] | null>(null);
   const [showMessageDetail, setShowMessageDetail] = useState(false);
   
   const userName = "Alex Johnson";
   
   const handleLogout = () => {
-    disconnect();
+    disconnectWallet();
     toast({
       title: "Logged Out",
       description: "You've been successfully logged out.",
