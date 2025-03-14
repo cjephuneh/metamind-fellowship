@@ -35,11 +35,11 @@ const App = () => {
         <BrowserRouter>
           <WalletProvider>
             <Routes>
-              <Route path="/" element={<Index apiKey={openAIApiKey} setApiKey={setOpenAIApiKey} />} />
+              <Route path="/" element={<Index />} />
               <Route path="/connect" element={<ConnectWallet />} />
               <Route path="/register" element={<Register />} />
-              <Route path="/dashboard" element={<Dashboard apiKey={openAIApiKey} />} />
-              <Route path="/scholarships/:id" element={<ScholarshipDetail apiKey={openAIApiKey} />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/scholarships/:id" element={<ScholarshipDetail />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

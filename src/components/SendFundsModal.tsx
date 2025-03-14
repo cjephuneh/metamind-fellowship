@@ -34,7 +34,7 @@ const SendFundsModal = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const { toast } = useToast();
-  const { account, isConnected } = useWallet();
+  const { account, isConnected, sendTransaction } = useWallet();
 
   const handleSendFunds = async () => {
     if (!amount || parseFloat(amount) <= 0) {
@@ -58,47 +58,40 @@ const SendFundsModal = ({
     setIsLoading(true);
 
     try {
-      // Convert amount to Wei (1 ETH = 10^18 Wei)
-      const amountInWei = (parseFloat(amount) * 1e18).toString();
+      const success = await sendTransaction(amount, recipientAddress);
       
-      // Request transaction from MetaMask
-      await window.ethereum?.request({
-        method: "eth_sendTransaction",
-        params: [
-          {
-            from: account,
-            to: recipientAddress,
-            value: `0x${parseInt(amountInWei).toString(16)}`, // Convert to hex
-            gas: "0x5208", // 21000 gas in hex
-          },
-        ],
-      });
-      
-      setIsSuccess(true);
-      toast({
-        title: "Transaction Submitted",
-        description: `You've successfully sent ${amount} ETH to ${recipientName}.`,
-      });
-      
-      // Record the transaction in your system if needed
-      // This would typically be done through an API call
-      console.log("Transaction recorded:", {
-        from: account,
-        to: recipientAddress,
-        amount,
-        scholarshipId,
-        timestamp: new Date(),
-      });
-      
-      // Reset the form
-      setAmount("");
-      
-      // Close modal after brief success message
-      setTimeout(() => {
-        setIsSuccess(false);
-        onClose();
-      }, 2000);
-      
+      if (success) {
+        setIsSuccess(true);
+        toast({
+          title: "Transaction Submitted",
+          description: `You've successfully sent ${amount} ETH to ${recipientName}.`,
+        });
+        
+        // Record the transaction in your system if needed
+        // This would typically be done through an API call
+        console.log("Transaction recorded:", {
+          from: account,
+          to: recipientAddress,
+          amount,
+          scholarshipId,
+          timestamp: new Date(),
+        });
+        
+        // Reset the form
+        setAmount("");
+        
+        // Close modal after brief success message
+        setTimeout(() => {
+          setIsSuccess(false);
+          onClose();
+        }, 2000);
+      } else {
+        toast({
+          title: "Transaction Failed",
+          description: "There was an error processing your transaction.",
+          variant: "destructive",
+        });
+      }
     } catch (error: any) {
       console.error("Transaction error:", error);
       toast({

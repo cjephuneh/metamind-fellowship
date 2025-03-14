@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Message, MessageCircle, Send, Settings } from "lucide-react";
+import { MessageCircle, Send, Settings } from "lucide-react";
 import { useWallet } from "@/context/WalletContext";
 import { useToast } from "@/hooks/use-toast";
 import AIChat from "./AIChat";

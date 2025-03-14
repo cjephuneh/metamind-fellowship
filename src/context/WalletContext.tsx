@@ -15,6 +15,9 @@ interface WalletContextType {
   disconnectWallet: () => void;
   sendTransaction: (amount: string, recipient: string) => Promise<boolean>;
   refreshBalance: () => Promise<void>;
+  isConnected: boolean;
+  account: string | undefined;
+  userType: string | undefined;
 }
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
@@ -25,24 +28,18 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Check if user is already connected on mount
   useEffect(() => {
     const checkConnection = async () => {
       try {
-        // Check if MetaMask is installed
         if (typeof window.ethereum !== 'undefined') {
-          // Check if already connected
           const accounts = await window.ethereum.request({ method: 'eth_accounts' });
           
           if (accounts && accounts.length > 0) {
-            // Get user data from localStorage if available
             const userData = localStorage.getItem('user');
             if (userData) {
               const parsedUser = JSON.parse(userData);
               
-              // Verify the stored address matches the current connected account
               if (parsedUser.address.toLowerCase() === accounts[0].toLowerCase()) {
-                // Get current balance
                 const balance = await window.ethereum.request({
                   method: 'eth_getBalance',
                   params: [accounts[0], 'latest'],
@@ -55,11 +52,9 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
                   balance: balanceInEth
                 });
               } else {
-                // Address mismatch, clear localStorage
                 localStorage.removeItem('user');
               }
             } else {
-              // Just set the address without type
               const balance = await window.ethereum.request({
                 method: 'eth_getBalance',
                 params: [accounts[0], 'latest'],
@@ -81,7 +76,6 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
 
     checkConnection();
     
-    // Set up event listeners for MetaMask
     if (typeof window.ethereum !== 'undefined') {
       window.ethereum.on('accountsChanged', handleAccountsChanged);
       window.ethereum.on('chainChanged', () => window.location.reload());
@@ -96,7 +90,6 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
 
   const handleAccountsChanged = async (accounts: string[]) => {
     if (accounts.length === 0) {
-      // User disconnected their wallet
       setUser(null);
       localStorage.removeItem('user');
       toast({
@@ -105,7 +98,6 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       });
       navigate('/');
     } else {
-      // User switched accounts
       const balance = await window.ethereum.request({
         method: 'eth_getBalance',
         params: [accounts[0], 'latest'],
@@ -113,16 +105,14 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       
       const balanceInEth = (parseInt(balance, 16) / 1e18).toFixed(4);
       
-      // Update with the new address but keep the user type if possible
       const newUser = {
         address: accounts[0],
-        type: user?.type,
+        ...(user?.type && { type: user?.type }),
         balance: balanceInEth
       };
       
       setUser(newUser);
       
-      // Update localStorage
       if (user?.type) {
         localStorage.setItem('user', JSON.stringify(newUser));
       }
@@ -138,13 +128,10 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     setIsConnecting(true);
     
     try {
-      // Check if MetaMask is installed
       if (typeof window.ethereum !== 'undefined') {
-        // Request account access
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
         
         if (accounts && accounts.length > 0) {
-          // Get current balance
           const balance = await window.ethereum.request({
             method: 'eth_getBalance',
             params: [accounts[0], 'latest'],
@@ -160,7 +147,6 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
           
           setUser(newUser);
           
-          // If user type is provided, save to localStorage
           if (type) {
             localStorage.setItem('user', JSON.stringify(newUser));
           }
@@ -239,10 +225,8 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     }
     
     try {
-      // Convert amount from ETH to Wei
       const amountInWei = `0x${(parseFloat(amount) * 1e18).toString(16)}`;
       
-      // Send transaction
       const txHash = await window.ethereum.request({
         method: 'eth_sendTransaction',
         params: [{
@@ -257,7 +241,6 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
         description: `Transaction hash: ${txHash.slice(0, 6)}...${txHash.slice(-4)}`,
       });
       
-      // Refresh balance after transaction
       await refreshBalance();
       
       return true;
@@ -272,6 +255,10 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const isConnected = user !== null;
+  const account = user?.address;
+  const userType = user?.type;
+
   return (
     <WalletContext.Provider value={{
       user,
@@ -279,7 +266,10 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       connectWallet,
       disconnectWallet,
       sendTransaction,
-      refreshBalance
+      refreshBalance,
+      isConnected,
+      account,
+      userType
     }}>
       {children}
     </WalletContext.Provider>
