@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -140,6 +141,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      {/* Sidebar for desktop */}
       <div className="hidden md:flex w-64 flex-col fixed inset-y-0 bg-white border-r border-gray-200 shadow-sm">
         <div className="flex items-center h-16 gap-2 px-6 border-b bg-gradient-to-r from-purple-500 to-purple-700 text-white">
           <Sparkles className="h-5 w-5" />
@@ -281,6 +283,7 @@ const Dashboard = () => {
         </div>
       </div>
       
+      {/* Mobile header */}
       <div className="md:hidden flex items-center justify-between h-16 px-4 border-b bg-white fixed top-0 w-full z-10">
         <div className="flex items-center">
           <Sparkles className="h-5 w-5 text-purple-500 mr-2" />
@@ -288,6 +291,7 @@ const Dashboard = () => {
         </div>
       </div>
 
+      {/* Main content */}
       <div className="flex-1 md:ml-64 pt-16 md:pt-0">
         <main className="p-6">
           <header className="mb-8">
@@ -784,5 +788,22 @@ const Dashboard = () => {
               </div>
             </div>
           )}
-       
+          
+          {/* Display message modal when a message is selected */}
+          {selectedMessage && (
+            <MessageModal
+              isOpen={showMessageDetails}
+              message={selectedMessage}
+              onClose={() => {
+                setShowMessageDetails(false);
+                setSelectedMessage(null);
+              }}
+            />
+          )}
+        </main>
+      </div>
+    </div>
+  );
+};
 
+export default Dashboard;
