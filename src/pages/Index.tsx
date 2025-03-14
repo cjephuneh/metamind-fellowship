@@ -8,12 +8,17 @@ import { useWallet } from "@/context/WalletContext";
 
 const Index = () => {
   const { toast } = useToast();
-  const { setUserType } = useWallet();
+  const { connectWallet } = useWallet();
   const [viewType, setViewType] = useState<"student" | "sponsor">("student");
 
   const handleViewTypeChange = (type: "student" | "sponsor") => {
     setViewType(type);
-    setUserType(type);
+    // We connect with the selected type instead of using setUserType
+    // This will correctly set the user type in the wallet context
+  };
+
+  const handleConnect = (type: "student" | "sponsor") => {
+    connectWallet(type);
   };
 
   return (
@@ -54,11 +59,13 @@ const Index = () => {
               Dashboard
             </Button>
           </Link>
-          <Link to="/connect">
-            <Button size="sm" className="bg-purple-500 hover:bg-purple-600">
-              Connect Wallet
-            </Button>
-          </Link>
+          <Button 
+            onClick={() => handleConnect(viewType)}
+            size="sm" 
+            className="bg-purple-500 hover:bg-purple-600"
+          >
+            Connect Wallet
+          </Button>
         </div>
       </nav>
 

@@ -198,7 +198,7 @@ const Apply = () => {
                         onChange={handleFileChange}
                       />
                       <label htmlFor="file-upload">
-                        <Button variant="outline" className="cursor-pointer" as="span">
+                        <Button variant="outline" className="cursor-pointer">
                           Select Files
                         </Button>
                       </label>
