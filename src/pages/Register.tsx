@@ -1,10 +1,10 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { useWallet } from "@/context/WalletContext";
 import { ArrowLeft, ArrowRight, Upload } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,10 +14,10 @@ const Register = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useWallet();
   
-  // Get user type and wallet address from URL
+  // Get user type from URL
   const userType = searchParams.get("type") || "student";
-  const walletAddress = searchParams.get("address") || "";
   
   const [formData, setFormData] = useState({
     name: "",
@@ -30,6 +30,18 @@ const Register = () => {
   
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
+
+  // Redirect if not connected
+  useEffect(() => {
+    if (!user?.address) {
+      toast({
+        variant: "destructive",
+        title: "Wallet Not Connected",
+        description: "Please connect your wallet first."
+      });
+      navigate("/connect");
+    }
+  }, [user, navigate, toast]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -80,7 +92,7 @@ const Register = () => {
       console.log("Submitting registration:", {
         ...formData,
         userType,
-        walletAddress
+        walletAddress: user?.address
       });
       
       // Simulate API call
@@ -297,9 +309,11 @@ const Register = () => {
             </form>
           </CardContent>
           <CardFooter className="flex justify-center">
-            <p className="text-xs text-gray-500">
-              Connected with wallet: {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
-            </p>
+            {user?.address && (
+              <p className="text-xs text-gray-500">
+                Connected with wallet: {user.address.slice(0, 6)}...{user.address.slice(-4)}
+              </p>
+            )}
           </CardFooter>
         </Card>
       </div>

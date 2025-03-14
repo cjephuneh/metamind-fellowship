@@ -1,48 +1,25 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import { useWallet } from "@/context/WalletContext";
 import { ArrowLeft, AlertCircle, Wallet } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 
 const ConnectWallet = () => {
-  const { toast } = useToast();
-  const [isConnecting, setIsConnecting] = useState(false);
+  const { connectWallet, isConnecting } = useWallet();
+  const navigate = useNavigate();
   const [userType, setUserType] = useState("student");
 
   const handleConnectMetaMask = async () => {
-    setIsConnecting(true);
-
-    try {
-      // Check if MetaMask is installed
-      if (typeof window.ethereum !== 'undefined') {
-        // Request account access
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        
-        // Successfully connected
-        toast({
-          title: "Wallet Connected!",
-          description: `Connected with address: ${accounts[0].slice(0, 6)}...${accounts[0].slice(-4)}`,
-        });
-        
-        // In a real app, you would redirect to registration or dashboard here
-        setTimeout(() => {
-          window.location.href = `/register?type=${userType}&address=${accounts[0]}`;
-        }, 1500);
-      } else {
-        throw new Error("MetaMask not installed");
-      }
-    } catch (error) {
-      console.error(error);
-      toast({
-        variant: "destructive",
-        title: "Connection Failed",
-        description: "Please make sure MetaMask is installed and try again.",
-      });
-    } finally {
-      setIsConnecting(false);
+    const success = await connectWallet(userType as "student" | "sponsor");
+    
+    if (success) {
+      // Redirect to registration
+      setTimeout(() => {
+        navigate(`/register?type=${userType}`);
+      }, 1000);
     }
   };
 

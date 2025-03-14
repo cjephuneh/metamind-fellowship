@@ -1,10 +1,11 @@
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Sparkles, SendHorizonal } from "lucide-react";
+import { Sparkles, SendHorizonal, Info } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 interface AIAssistantProps {
   context?: string;
@@ -15,6 +16,7 @@ interface AIAssistantProps {
 type ConversationMessage = {
   role: "user" | "assistant";
   content: string;
+  timestamp?: Date;
 };
 
 const AIAssistant = ({ context = "scholarship application", onClose }: AIAssistantProps) => {
@@ -23,62 +25,96 @@ const AIAssistant = ({ context = "scholarship application", onClose }: AIAssista
   const [conversation, setConversation] = useState<ConversationMessage[]>([
     {
       role: "assistant",
-      content: `Hi there! I'm your AI assistant for the ${context}. How can I help you today?`
+      content: `Hi there! I'm your AI assistant for the ${context}. How can I help you today?`,
+      timestamp: new Date()
     }
   ]);
   const [isThinking, setIsThinking] = useState(false);
+  const [selectedMessage, setSelectedMessage] = useState<ConversationMessage | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Simulated AI response - in a real application, this would call an API
-  const getAIResponse = async (userMessage: string) => {
-    setIsThinking(true);
-    
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    // Sample responses based on keywords in the user's message
-    let response = "";
-    const lowerCaseMessage = userMessage.toLowerCase();
-    
-    if (lowerCaseMessage.includes("eligibility") || lowerCaseMessage.includes("qualify")) {
-      response = "Eligibility criteria vary by scholarship. Generally, you'll need to meet academic requirements, be enrolled in an accredited institution, and sometimes demonstrate financial need. I recommend checking the specific requirements for each scholarship you're interested in.";
-    } 
-    else if (lowerCaseMessage.includes("deadline") || lowerCaseMessage.includes("due date")) {
-      response = "Each scholarship has its own deadline. Make sure to submit your application well before the deadline to avoid any last-minute technical issues. You can see deadlines listed on each scholarship card.";
+  // Auto-scroll to bottom of messages
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [conversation]);
+
+  // Get AI response from Gemini API
+  const getGeminiResponse = async (userMessage: string): Promise<string> => {
+    try {
+      const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": "AIzaSyAdHdGR1_fm5G-AI1XpB-yZk-KMPXdVgjQ"
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              role: "user",
+              parts: [
+                {
+                  text: `You are a helpful AI assistant for a blockchain-based scholarship platform. 
+                  You provide information about scholarship applications, eligibility, and how to use the platform.
+                  
+                  Answer the following question concisely and accurately: ${userMessage}`
+                }
+              ]
+            }
+          ],
+          generationConfig: {
+            temperature: 0.7,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 800,
+          }
+        })
+      });
+
+      const data = await response.json();
+      
+      if (data.error) {
+        console.error("Gemini API error:", data.error);
+        throw new Error(data.error.message || "Failed to get response from Gemini");
+      }
+      
+      return data.candidates[0].content.parts[0].text;
+    } catch (error) {
+      console.error("Error calling Gemini API:", error);
+      throw error;
     }
-    else if (lowerCaseMessage.includes("essay") || lowerCaseMessage.includes("personal statement")) {
-      response = "For your scholarship essay or personal statement, focus on your unique story and aspirations. Be authentic, specific, and connect your experiences to your future goals. Proofread carefully and stay within the word limit.";
-    }
-    else if (lowerCaseMessage.includes("wallet") || lowerCaseMessage.includes("metamask")) {
-      response = "Your MetaMask wallet is used to verify your identity on our platform. Make sure to keep your recovery phrase secure and never share it with anyone. If you're having trouble connecting your wallet, try refreshing the page or updating the MetaMask extension.";
-    }
-    else if (lowerCaseMessage.includes("documents") || lowerCaseMessage.includes("transcripts")) {
-      response = "Most scholarships require academic transcripts, proof of enrollment, and sometimes financial information. Make sure these documents are up-to-date and in PDF format. Some scholarships may also request letters of recommendation.";
-    }
-    else {
-      response = "Thank you for your question. I'd be happy to help with that. Could you provide more specific details about what you're looking for regarding scholarships, applications, or the platform?";
-    }
-    
-    setIsThinking(false);
-    return response;
   };
 
   const handleSendMessage = async () => {
     if (!message.trim()) return;
     
     // Add user message to conversation
+    const userMessage = {
+      role: "user" as const,
+      content: message,
+      timestamp: new Date()
+    };
+    
     const updatedConversation: ConversationMessage[] = [
       ...conversation,
-      { role: "user", content: message }
+      userMessage
     ];
+    
     setConversation(updatedConversation);
     setMessage("");
+    setIsThinking(true);
     
     try {
-      // Get AI response
-      const aiResponse = await getAIResponse(message);
+      // Get Gemini response
+      const aiResponse = await getGeminiResponse(message);
+      
       setConversation([
         ...updatedConversation,
-        { role: "assistant", content: aiResponse }
+        { 
+          role: "assistant", 
+          content: aiResponse,
+          timestamp: new Date()
+        }
       ]);
     } catch (error) {
       console.error("Error getting AI response:", error);
@@ -87,92 +123,134 @@ const AIAssistant = ({ context = "scholarship application", onClose }: AIAssista
         title: "Error",
         description: "Unable to get a response. Please try again later."
       });
+    } finally {
+      setIsThinking(false);
     }
   };
 
+  const handleMessageClick = (message: ConversationMessage) => {
+    setSelectedMessage(message);
+    setIsModalOpen(true);
+  };
+
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader className="bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-t-lg">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5" />
-            <CardTitle>AI Scholarship Assistant</CardTitle>
+    <>
+      <Card className="w-full max-w-md">
+        <CardHeader className="bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-t-lg">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5" />
+              <CardTitle>AI Scholarship Assistant</CardTitle>
+            </div>
+            {onClose && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={onClose}
+                className="h-8 w-8 p-0 text-white hover:bg-white/20"
+              >
+                ×
+              </Button>
+            )}
           </div>
-          {onClose && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={onClose}
-              className="h-8 w-8 p-0 text-white hover:bg-white/20"
-            >
-              ×
-            </Button>
-          )}
-        </div>
-        <CardDescription className="text-purple-100 mt-1">
-          Ask me anything about scholarships and applications
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="p-0">
-        <div className="h-80 overflow-y-auto p-4">
-          {conversation.map((message, index) => (
-            <div
-              key={index}
-              className={`mb-4 ${
-                message.role === "user" 
-                  ? "text-right" 
-                  : "text-left"
-              }`}
-            >
+          <CardDescription className="text-purple-100 mt-1">
+            Ask me anything about scholarships and applications
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="h-80 overflow-y-auto p-4">
+            {conversation.map((msg, index) => (
               <div
-                className={`inline-block max-w-[80%] rounded-lg px-4 py-2 ${
-                  message.role === "user"
-                    ? "bg-purple-500 text-white"
-                    : "bg-gray-100 text-gray-800"
+                key={index}
+                className={`mb-4 ${
+                  msg.role === "user" 
+                    ? "text-right" 
+                    : "text-left"
                 }`}
               >
-                {message.content}
-              </div>
-            </div>
-          ))}
-          {isThinking && (
-            <div className="text-left mb-4">
-              <div className="inline-block max-w-[80%] rounded-lg px-4 py-2 bg-gray-100">
-                <div className="flex gap-1">
-                  <div className="h-2 w-2 rounded-full bg-gray-400 animate-bounce"></div>
-                  <div className="h-2 w-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "0.2s" }}></div>
-                  <div className="h-2 w-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "0.4s" }}></div>
+                <div className="flex flex-col">
+                  <div
+                    className={`inline-block max-w-[80%] rounded-lg px-4 py-2 ${
+                      msg.role === "user"
+                        ? "bg-purple-500 text-white"
+                        : "bg-gray-100 text-gray-800"
+                    }`}
+                    onClick={() => handleMessageClick(msg)}
+                  >
+                    {msg.content}
+                    <div className="flex justify-end mt-1">
+                      <Info className="h-3 w-3 text-current opacity-50" />
+                    </div>
+                  </div>
+                  {msg.timestamp && (
+                    <span className="text-xs text-gray-500 mt-1">
+                      {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  )}
                 </div>
               </div>
+            ))}
+            {isThinking && (
+              <div className="text-left mb-4">
+                <div className="inline-block max-w-[80%] rounded-lg px-4 py-2 bg-gray-100">
+                  <div className="flex gap-1">
+                    <div className="h-2 w-2 rounded-full bg-gray-400 animate-bounce"></div>
+                    <div className="h-2 w-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "0.2s" }}></div>
+                    <div className="h-2 w-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "0.4s" }}></div>
+                  </div>
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+        </CardContent>
+        <CardFooter className="border-t p-3">
+          <div className="flex w-full items-center gap-2">
+            <Textarea
+              placeholder="Ask a question..."
+              className="min-h-10 flex-1 resize-none"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }}
+            />
+            <Button
+              size="sm"
+              className="h-10 bg-purple-500 hover:bg-purple-600"
+              onClick={handleSendMessage}
+              disabled={isThinking || !message.trim()}
+            >
+              <SendHorizonal className="h-4 w-4" />
+            </Button>
+          </div>
+        </CardFooter>
+      </Card>
+
+      {/* Message Detail Modal */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedMessage?.role === "user" ? "Your Message" : "AI Response"}
+            </DialogTitle>
+            <DialogDescription>
+              {selectedMessage?.timestamp ? 
+                `Sent at ${selectedMessage.timestamp.toLocaleString()}` : 
+                "Message details"}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="p-4 bg-gray-50 rounded-md">
+              {selectedMessage?.content}
             </div>
-          )}
-        </div>
-      </CardContent>
-      <CardFooter className="border-t p-3">
-        <div className="flex w-full items-center gap-2">
-          <Textarea
-            placeholder="Ask a question..."
-            className="min-h-10 flex-1 resize-none"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleSendMessage();
-              }
-            }}
-          />
-          <Button
-            size="sm"
-            className="h-10 bg-purple-500 hover:bg-purple-600"
-            onClick={handleSendMessage}
-            disabled={isThinking || !message.trim()}
-          >
-            <SendHorizonal className="h-4 w-4" />
-          </Button>
-        </div>
-      </CardFooter>
-    </Card>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 
