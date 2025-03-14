@@ -11,10 +11,16 @@ interface AIAssistantProps {
   onClose?: () => void;
 }
 
+// Define a type for the conversation messages
+type ConversationMessage = {
+  role: "user" | "assistant";
+  content: string;
+};
+
 const AIAssistant = ({ context = "scholarship application", onClose }: AIAssistantProps) => {
   const { toast } = useToast();
   const [message, setMessage] = useState("");
-  const [conversation, setConversation] = useState<{role: "user" | "assistant", content: string}[]>([
+  const [conversation, setConversation] = useState<ConversationMessage[]>([
     {
       role: "assistant",
       content: `Hi there! I'm your AI assistant for the ${context}. How can I help you today?`
@@ -60,7 +66,7 @@ const AIAssistant = ({ context = "scholarship application", onClose }: AIAssista
     if (!message.trim()) return;
     
     // Add user message to conversation
-    const updatedConversation = [
+    const updatedConversation: ConversationMessage[] = [
       ...conversation,
       { role: "user", content: message }
     ];
