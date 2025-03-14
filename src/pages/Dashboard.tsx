@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -13,9 +14,7 @@ import {
   User,
   CheckCircle2,
   Clock,
-  BookCheck,
   CreditCard,
-  BarChart3,
   Gift,
   FileText,
   HandCoins,
@@ -491,11 +490,33 @@ const Dashboard = () => {
                               : "Under Review"}
                           </span>
                           <div className="flex gap-2">
-                            <Button variant="outline" size="sm">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => {
+                                // Find related conversation and open message detail
+                                const conversation = mockConversations.find(c => 
+                                  c.recipient === application.sponsor
+                                );
+                                if (conversation) {
+                                  setSelectedConversation(conversation);
+                                  setShowMessageDetail(true);
+                                }
+                              }}
+                            >
                               <MessageCircle className="h-4 w-4 mr-1" />
                               Message
                             </Button>
-                            <Button size="sm" className="bg-purple-500 hover:bg-purple-600">View Details</Button>
+                            <Button 
+                              size="sm" 
+                              className="bg-purple-500 hover:bg-purple-600"
+                              onClick={() => {
+                                // Navigate to scholarship detail
+                                window.location.href = `/scholarships/${application.scholarshipId}`;
+                              }}
+                            >
+                              View Details
+                            </Button>
                           </div>
                         </div>
                       </CardFooter>
@@ -541,6 +562,7 @@ const Dashboard = () => {
                           title: "Application Started",
                           description: `You've started an application for ${scholarship.title}`,
                         });
+                        window.location.href = "/apply";
                       }}
                     />
                   ))}
@@ -592,11 +614,32 @@ const Dashboard = () => {
                     </CardContent>
                     <CardFooter>
                       <div className="flex gap-3">
-                        <Button variant="outline" size="sm">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => {
+                            // Find related conversation and open message detail
+                            const conversation = mockConversations.find(c => 
+                              c.recipient === application.sponsor
+                            );
+                            if (conversation) {
+                              setSelectedConversation(conversation);
+                              setShowMessageDetail(true);
+                            }
+                          }}
+                        >
                           <MessageCircle className="h-4 w-4 mr-1" />
                           Message Sponsor
                         </Button>
-                        <Button size="sm" className="bg-purple-500 hover:bg-purple-600">View Details</Button>
+                        <Button 
+                          size="sm" 
+                          className="bg-purple-500 hover:bg-purple-600"
+                          onClick={() => {
+                            window.location.href = `/scholarships/${application.scholarshipId}`;
+                          }}
+                        >
+                          View Details
+                        </Button>
                       </div>
                     </CardFooter>
                   </Card>
@@ -699,7 +742,18 @@ const Dashboard = () => {
                           </div>
                         </div>
                         <div className="flex gap-2">
-                          <Button variant="outline" size="sm">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              // Here you would normally find the correct conversation
+                              // For demo purposes, we'll just open the first one
+                              if (mockConversations.length > 0) {
+                                setSelectedConversation(mockConversations[0]);
+                                setShowMessageDetail(true);
+                              }
+                            }}
+                          >
                             <MessageCircle className="h-4 w-4 mr-1" />
                             Message
                           </Button>
@@ -733,7 +787,16 @@ const Dashboard = () => {
                           </div>
                         </div>
                         <div className="flex gap-2">
-                          <Button variant="outline" size="sm">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              if (mockConversations.length > 0) {
+                                setSelectedConversation(mockConversations[1]);
+                                setShowMessageDetail(true);
+                              }
+                            }}
+                          >
                             <MessageCircle className="h-4 w-4 mr-1" />
                             Message
                           </Button>
@@ -784,3 +847,180 @@ const Dashboard = () => {
                       <option>Science</option>
                       <option>Arts</option>
                       <option>Humanities</option>
+                      <option>Business</option>
+                      <option>Other</option>
+                    </select>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Scholarship Description</label>
+                    <textarea
+                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 h-32"
+                      placeholder="Describe the scholarship, its purpose, and who should apply."
+                    ></textarea>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Eligibility Requirements</label>
+                    <textarea
+                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 h-20"
+                      placeholder="List all requirements applicants must meet to be eligible."
+                    ></textarea>
+                  </div>
+                
+                  <div className="md:col-span-2 flex justify-end gap-3 mt-4">
+                    <Button variant="outline">Save as Draft</Button>
+                    <Button className="bg-purple-500 hover:bg-purple-600">Create Scholarship</Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {activeTab === "messages" && (
+            <div className="space-y-6">
+              <h2 className="text-xl font-semibold flex items-center gap-2">
+                <MessageCircle className="h-5 w-5 text-purple-500" />
+                Messages
+              </h2>
+              
+              <div className="space-y-4">
+                {mockConversations.map(conversation => (
+                  <Card key={conversation.id} className="hover:shadow-md transition-shadow">
+                    <div 
+                      className="flex justify-between items-center p-4 cursor-pointer"
+                      onClick={() => {
+                        setSelectedConversation(conversation);
+                        setShowMessageDetail(true);
+                      }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                          <User className="h-5 w-5 text-purple-600" />
+                        </div>
+                        <div>
+                          <div className="font-medium flex items-center gap-2">
+                            {conversation.recipient}
+                            {conversation.unread && (
+                              <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                            )}
+                          </div>
+                          <div className="text-sm text-gray-500 truncate max-w-[200px]">
+                            {conversation.lastMessage}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-xs text-gray-500">{conversation.timestamp}</div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {activeTab === "profile" && (
+            <div className="space-y-6">
+              <h2 className="text-xl font-semibold flex items-center gap-2">
+                <User className="h-5 w-5 text-purple-500" />
+                Profile
+              </h2>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle>Personal Information</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                      <input 
+                        type="text" 
+                        value={userName} 
+                        className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        readOnly 
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                      <input 
+                        type="email" 
+                        value="alex.johnson@example.com" 
+                        className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        readOnly 
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Wallet Address</label>
+                      <input 
+                        type="text" 
+                        value={account || "Not connected"} 
+                        className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        readOnly
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <Button className="bg-purple-500 hover:bg-purple-600">Edit Profile</Button>
+                </CardFooter>
+              </Card>
+            </div>
+          )}
+          
+          {activeTab === "aiAssistant" && (
+            <div className="space-y-6">
+              <h2 className="text-xl font-semibold flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-purple-500" />
+                AI Assistant
+              </h2>
+              
+              <Card className="h-[500px] flex flex-col">
+                <CardHeader>
+                  <CardTitle>Ask me anything about scholarships</CardTitle>
+                  <CardDescription>
+                    I can help with applications, finding scholarships, or understanding requirements.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="flex-1 overflow-auto">
+                  <div className="space-y-4">
+                    <div className="flex justify-start">
+                      <div className="bg-gray-100 rounded-lg p-3 max-w-[80%]">
+                        <p className="text-sm">
+                          Hi! I'm your AI scholarship assistant. How can I help you today?
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+                <CardFooter className="border-t">
+                  <div className="flex gap-2 w-full">
+                    <input
+                      type="text"
+                      placeholder="Type your question here..."
+                      className="flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    />
+                    <Button className="bg-purple-500 hover:bg-purple-600">
+                      Send
+                    </Button>
+                  </div>
+                </CardFooter>
+              </Card>
+            </div>
+          )}
+        </main>
+      </div>
+
+      {/* Message Detail Modal */}
+      {selectedConversation && (
+        <MessageDetailModal
+          isOpen={showMessageDetail}
+          onClose={() => setShowMessageDetail(false)}
+          conversation={selectedConversation}
+          onSendMessage={handleSendMessage}
+        />
+      )}
+    </div>
+  );
+};
+
+export default Dashboard;
