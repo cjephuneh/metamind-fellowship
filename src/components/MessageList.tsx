@@ -1,12 +1,10 @@
 
 import React from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Message } from "./MessageModal";
+import { Eye } from "lucide-react";
 
 interface MessageListProps {
   messages: Message[];
@@ -45,6 +43,7 @@ const MessageList: React.FC<MessageListProps> = ({ messages, onViewMessage }) =>
                 className="bg-purple-500 hover:bg-purple-600"
                 onClick={() => onViewMessage(message)}
               >
+                <Eye className="mr-1 h-4 w-4" />
                 View Details
               </Button>
             </div>
