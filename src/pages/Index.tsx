@@ -3,23 +3,9 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowRight, BookOpen, CheckCircle, MessageCircle, Shield, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useState } from "react";
-import { useWallet } from "@/context/WalletContext";
 
 const Index = () => {
   const { toast } = useToast();
-  const { connectWallet } = useWallet();
-  const [viewType, setViewType] = useState<"student" | "sponsor">("student");
-
-  const handleViewTypeChange = (type: "student" | "sponsor") => {
-    setViewType(type);
-    // We connect with the selected type instead of using setUserType
-    // This will correctly set the user type in the wallet context
-  };
-
-  const handleConnect = (type: "student" | "sponsor") => {
-    connectWallet(type);
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-slate-50">
@@ -33,39 +19,19 @@ const Index = () => {
           <Link to="/scholarships" className="text-sm font-medium hover:text-purple-500 transition-colors">
             Explore
           </Link>
-          <Link to="/apply" className="text-sm font-medium hover:text-purple-500 transition-colors">
-            Apply
+          <Link to="/how-it-works" className="text-sm font-medium hover:text-purple-500 transition-colors">
+            How it Works
           </Link>
-          <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-md">
-            <Button 
-              variant={viewType === "student" ? "default" : "outline"} 
-              size="sm"
-              onClick={() => handleViewTypeChange("student")}
-              className={viewType === "student" ? "bg-purple-500 hover:bg-purple-600 text-white" : ""}
-            >
-              Student
-            </Button>
-            <Button 
-              variant={viewType === "sponsor" ? "default" : "outline"} 
-              size="sm"
-              onClick={() => handleViewTypeChange("sponsor")}
-              className={viewType === "sponsor" ? "bg-purple-500 hover:bg-purple-600 text-white" : ""}
-            >
-              Sponsor
-            </Button>
-          </div>
           <Link to="/dashboard">
             <Button variant="outline" size="sm" className="hidden sm:flex">
               Dashboard
             </Button>
           </Link>
-          <Button 
-            onClick={() => handleConnect(viewType)}
-            size="sm" 
-            className="bg-purple-500 hover:bg-purple-600"
-          >
-            Connect Wallet
-          </Button>
+          <Link to="/connect">
+            <Button size="sm" className="bg-purple-500 hover:bg-purple-600">
+              Connect Wallet
+            </Button>
+          </Link>
         </div>
       </nav>
 

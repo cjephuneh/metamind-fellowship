@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -24,8 +23,6 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import ScholarshipCard from "@/components/ScholarshipCard";
-import { useWallet } from "@/context/WalletContext";
-import MessageModal from "@/components/MessageModal";
 
 const mockScholarships = [
   {
@@ -81,50 +78,14 @@ const mockApplications = [
   }
 ];
 
-const mockMessages = [
-  {
-    id: "msg1",
-    sender: {
-      name: "Future Tech Foundation",
-      walletAddress: "0x3a2d3b45C67A98df234B21399E8ee9C",
-      avatar: ""
-    },
-    recipient: {
-      name: "Alex Johnson",
-      walletAddress: "0x71C7656EC7ab88b098defB751B7401B5f6d8976F"
-    },
-    content: "Thank you for your interest in our scholarship program. Your application has been received and is currently under review. We will notify you of any updates.",
-    timestamp: new Date(2023, 5, 15, 10, 30),
-    read: false
-  },
-  {
-    id: "msg2",
-    sender: {
-      name: "Diversity in Tech Alliance",
-      walletAddress: "0x8b34c91A53D7e4eC45C67Ae1234c5d6",
-      avatar: ""
-    },
-    recipient: {
-      name: "Alex Johnson",
-      walletAddress: "0x71C7656EC7ab88b098defB751B7401B5f6d8976F"
-    },
-    content: "We've reviewed your application for the Women in STEM Scholarship and we're pleased to inform you that you've been selected as a recipient! Please check your dashboard for next steps.",
-    timestamp: new Date(2023, 5, 10, 14, 45),
-    read: true
-  }
-];
-
 const Dashboard = () => {
   const { toast } = useToast();
-  const { userType, account, disconnectWallet } = useWallet();
   const [activeTab, setActiveTab] = useState("overview");
-  const [selectedMessage, setSelectedMessage] = useState<typeof mockMessages[0] | null>(null);
-  const [showMessageDetails, setShowMessageDetails] = useState(false);
-  
+  const [userType, setUserType] = useState<"student" | "sponsor">("student");
+  const userWalletAddress = "0x71C7656EC7ab88b098defB751B7401B5f6d8976F";
   const userName = "Alex Johnson";
   
   const handleLogout = () => {
-    disconnectWallet();
     toast({
       title: "Logged Out",
       description: "You've been successfully logged out.",
@@ -134,14 +95,30 @@ const Dashboard = () => {
     }, 1500);
   };
 
-  const handleViewMessageDetails = (message: typeof mockMessages[0]) => {
-    setSelectedMessage(message);
-    setShowMessageDetails(true);
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      {/* Sidebar for desktop */}
+      <div className="fixed top-4 right-4 z-50 bg-white rounded-md shadow-md p-2">
+        <div className="flex items-center gap-2 text-xs">
+          <span>View as:</span>
+          <Button 
+            variant={userType === "student" ? "default" : "outline"} 
+            size="sm"
+            onClick={() => setUserType("student")}
+            className={userType === "student" ? "bg-purple-600 text-white" : ""}
+          >
+            Student
+          </Button>
+          <Button 
+            variant={userType === "sponsor" ? "default" : "outline"} 
+            size="sm"
+            onClick={() => setUserType("sponsor")}
+            className={userType === "sponsor" ? "bg-purple-600 text-white" : ""}
+          >
+            Sponsor
+          </Button>
+        </div>
+      </div>
+      
       <div className="hidden md:flex w-64 flex-col fixed inset-y-0 bg-white border-r border-gray-200 shadow-sm">
         <div className="flex items-center h-16 gap-2 px-6 border-b bg-gradient-to-r from-purple-500 to-purple-700 text-white">
           <Sparkles className="h-5 w-5" />
@@ -270,7 +247,7 @@ const Dashboard = () => {
             
             <div className="flex items-center px-3 py-2 text-sm font-medium text-gray-600">
               <Wallet className="mr-3 h-5 w-5" />
-              <span className="truncate">{account ? `${account.slice(0, 6)}...${account.slice(-4)}` : "Not connected"}</span>
+              <span className="truncate">{userWalletAddress.slice(0, 6)}...{userWalletAddress.slice(-4)}</span>
             </div>
             <button 
               onClick={handleLogout}
@@ -283,7 +260,6 @@ const Dashboard = () => {
         </div>
       </div>
       
-      {/* Mobile header */}
       <div className="md:hidden flex items-center justify-between h-16 px-4 border-b bg-white fixed top-0 w-full z-10">
         <div className="flex items-center">
           <Sparkles className="h-5 w-5 text-purple-500 mr-2" />
@@ -291,7 +267,6 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Main content */}
       <div className="flex-1 md:ml-64 pt-16 md:pt-0">
         <main className="p-6">
           <header className="mb-8">
@@ -749,56 +724,215 @@ const Dashboard = () => {
                 Messages
               </h2>
               
-              <div className="space-y-4">
-                {mockMessages.map(message => (
-                  <Card key={message.id} className="hover:shadow-md transition-shadow">
-                    <CardHeader className="pb-2">
-                      <CardTitle>{message.sender.name}</CardTitle>
-                      <CardDescription>
-                        {message.timestamp.toLocaleDateString()}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="pb-2">
-                      <p className="text-gray-600">
-                        {message.content.length > 120 
-                          ? `${message.content.substring(0, 120)}...` 
-                          : message.content}
-                      </p>
-                    </CardContent>
-                    <CardFooter>
-                      <div className="flex justify-between items-center w-full">
-                        <span className={`px-2 py-1 text-xs rounded-full ${
-                          message.read 
-                            ? "bg-gray-100 text-gray-800" 
-                            : "bg-blue-100 text-blue-800"
-                        }`}>
-                          {message.read ? "Read" : "New"}
-                        </span>
-                        <Button 
-                          size="sm" 
-                          className="bg-purple-500 hover:bg-purple-600"
-                          onClick={() => handleViewMessageDetails(message)}
-                        >
-                          View Details
-                        </Button>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[calc(100vh-200px)]">
+                <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+                  <div className="p-3 border-b bg-gray-50">
+                    <h3 className="font-medium">Conversations</h3>
+                  </div>
+                  <div className="overflow-y-auto h-[calc(100%-50px)]">
+                    {[1, 2, 3, 4, 5].map(id => (
+                      <div key={id} className={`p-3 border-b hover:bg-gray-50 cursor-pointer ${id === 1 ? 'bg-purple-50' : ''}`}>
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                            <User className="h-5 w-5 text-purple-600" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex justify-between items-center">
+                              <span className="font-medium truncate">
+                                {id === 1 ? 'Future Tech Foundation' : id === 2 ? 'Diversity in Tech Alliance' : `Contact ${id}`}
+                              </span>
+                              <span className="text-xs text-gray-500">2h ago</span>
+                            </div>
+                            <p className="text-sm text-gray-500 truncate">Thank you for your interest in our scholarship program...</p>
+                          </div>
+                        </div>
                       </div>
-                    </CardFooter>
-                  </Card>
-                ))}
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="md:col-span-2 bg-white rounded-lg shadow-sm border flex flex-col">
+                  <div className="p-3 border-b bg-gray-50">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                        <User className="h-4 w-4 text-purple-600" />
+                      </div>
+                      <h3 className="font-medium">Future Tech Foundation</h3>
+                    </div>
+                  </div>
+                  
+                  <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                    <div className="flex justify-start">
+                      <div className="bg-gray-100 rounded-lg p-3 max-w-[70%]">
+                        <p className="text-sm">Hi there! Thanks for your interest in the Tech Innovation Grant. Do you have any questions about the application process?</p>
+                        <span className="text-xs text-gray-500 mt-1">10:30 AM</span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-end">
+                      <div className="bg-purple-100 rounded-lg p-3 max-w-[70%]">
+                        <p className="text-sm">Yes, I was wondering about the eligibility requirements. Do I need to be a current student to apply?</p>
+                        <span className="text-xs text-gray-500 mt-1">10:35 AM</span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-start">
+                      <div className="bg-gray-100 rounded-lg p-3 max-w-[70%]">
+                        <p className="text-sm">Yes, you need to be currently enrolled in an accredited institution to be eligible. You'll need to provide proof of enrollment during the application process.</p>
+                        <span className="text-xs text-gray-500 mt-1">10:40 AM</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="p-3 border-t">
+                    <div className="flex gap-2">
+                      <input type="text" className="flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="Type your message..." />
+                      <Button className="bg-purple-500 hover:bg-purple-600">Send</Button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           )}
           
-          {/* Display message modal when a message is selected */}
-          {selectedMessage && (
-            <MessageModal
-              isOpen={showMessageDetails}
-              message={selectedMessage}
-              onClose={() => {
-                setShowMessageDetails(false);
-                setSelectedMessage(null);
-              }}
-            />
+          {activeTab === "profile" && (
+            <div className="space-y-6">
+              <h2 className="text-xl font-semibold flex items-center gap-2">
+                <User className="h-5 w-5 text-purple-500" />
+                Profile
+              </h2>
+              
+              <div className="bg-white p-6 rounded-lg shadow-sm border">
+                <div className="flex flex-col md:flex-row gap-6">
+                  <div className="md:w-1/3">
+                    <div className="flex flex-col items-center">
+                      <div className="w-32 h-32 bg-purple-100 rounded-full flex items-center justify-center mb-4">
+                        <User className="h-16 w-16 text-purple-600" />
+                      </div>
+                      <Button variant="outline" size="sm" className="mb-2">Change Photo</Button>
+                      <div className="text-center mt-4">
+                        <h3 className="font-medium text-lg">{userName}</h3>
+                        <p className="text-sm text-gray-600 mt-1">{userType === "student" ? "Student" : "Sponsor"}</p>
+                        <div className="text-xs font-mono text-gray-500 mt-2 break-all">
+                          {userWalletAddress}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="md:w-2/3">
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                        <input type="text" className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" value={userName} />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input type="email" className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" value="alex.johnson@example.com" />
+                      </div>
+                      
+                      {userType === "student" && (
+                        <>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">University/Institution</label>
+                            <input type="text" className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" value="Stanford University" />
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Field of Study</label>
+                            <input type="text" className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" value="Computer Science" />
+                          </div>
+                        </>
+                      )}
+                      
+                      {userType === "sponsor" && (
+                        <>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Organization</label>
+                            <input type="text" className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" value="Future Tech Foundation" />
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Position</label>
+                            <input type="text" className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" value="Scholarship Director" />
+                          </div>
+                        </>
+                      )}
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Bio</label>
+                        <textarea className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 h-32" placeholder="Tell us about yourself..."></textarea>
+                      </div>
+                      
+                      <div className="flex justify-end">
+                        <Button className="bg-purple-500 hover:bg-purple-600">Save Changes</Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {activeTab === "aiAssistant" && (
+            <div className="space-y-6">
+              <h2 className="text-xl font-semibold flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-purple-500" />
+                AI Scholarship Assistant
+              </h2>
+              
+              <div className="bg-white rounded-lg shadow-sm border flex flex-col h-[600px]">
+                <div className="p-4 border-b bg-purple-50">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-purple-600" />
+                    <h3 className="font-medium">Scholarship Assistant</h3>
+                  </div>
+                  <p className="text-sm text-gray-600 mt-1">Ask me anything about scholarships, applications, or eligibility requirements.</p>
+                </div>
+                
+                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                  <div className="flex justify-start">
+                    <div className="bg-purple-100 rounded-lg p-3 max-w-[70%]">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Sparkles className="h-4 w-4 text-purple-600" />
+                        <span className="text-xs font-medium text-purple-700">Scholarship Assistant</span>
+                      </div>
+                      <p className="text-sm">Hello! I'm your AI scholarship assistant. I can help you find scholarships, understand eligibility requirements, and prepare your applications. What would you like help with today?</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-end">
+                    <div className="bg-gray-100 rounded-lg p-3 max-w-[70%]">
+                      <p className="text-sm">I'm looking for scholarships in computer science. Can you help me find some?</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-start">
+                    <div className="bg-purple-100 rounded-lg p-3 max-w-[70%]">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Sparkles className="h-4 w-4 text-purple-600" />
+                        <span className="text-xs font-medium text-purple-700">Scholarship Assistant</span>
+                      </div>
+                      <p className="text-sm">I'd be happy to help you find computer science scholarships! Based on your profile, here are some recommendations:</p>
+                      <ul className="list-disc list-inside text-sm mt-2 space-y-1">
+                        <li>Tech Innovation Grant - $5,000</li>
+                        <li>Women in STEM Scholarship - $7,500</li>
+                        <li>Computer Science Excellence Award - $3,000</li>
+                      </ul>
+                      <p className="text-sm mt-2">Would you like me to help you prepare for any of these applications?</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="p-4 border-t">
+                  <div className="flex gap-2">
+                    <input type="text" className="flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="Ask the AI assistant..." />
+                    <Button className="bg-purple-500 hover:bg-purple-600">Send</Button>
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
         </main>
       </div>

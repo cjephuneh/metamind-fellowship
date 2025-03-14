@@ -13,7 +13,6 @@ import ConnectWallet from "./pages/ConnectWallet";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import ScholarshipDetail from "./pages/ScholarshipDetail";
-import Apply from "./pages/Apply";
 
 const queryClient = new QueryClient();
 
@@ -41,7 +40,6 @@ const App = () => {
               <Route path="/register" element={<Register />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/scholarships/:id" element={<ScholarshipDetail />} />
-              <Route path="/apply" element={<Apply />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
