@@ -1,49 +1,98 @@
 import { Message } from "@/components/MessageModal";
 import scholarshipsData from "../../backend/data/scholarships.json";
+import { debounce } from "lodash";
 
 // Use a relative URL that works both in development and in the Lovable environment
 const API_BASE_URL = "/api";
 
-// Generic fetch function with error handling and fallback data
+// Keep track of ongoing requests to prevent duplicates
+const ongoingRequests = new Map();
+
+// Generic fetch function with improved error handling and fallback data
 async function fetchApi<T>(
   endpoint: string, 
   options: RequestInit = {},
   fallbackData?: T
 ): Promise<T> {
-  try {
-    const url = `${API_BASE_URL}${endpoint}`;
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-    });
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'An unknown error occurred' }));
-      throw new Error(error.message || `API error: ${response.status}`);
-    }
-
-    return response.json() as Promise<T>;
-  } catch (error) {
-    console.error(`API fetch error for ${endpoint}:`, error);
-    
-    // Return fallback data if provided
-    if (fallbackData !== undefined) {
-      console.log(`Using fallback data for ${endpoint}`);
-      return fallbackData;
-    }
-    
-    // Special case for scholarships endpoint
-    if (endpoint === '/scholarships' && Array.isArray(scholarshipsData)) {
-      console.log("Using local scholarships data");
-      return scholarshipsData as unknown as T;
-    }
-    
-    throw error;
+  // Check if we already have an ongoing request for this endpoint + method
+  const requestKey = `${endpoint}-${options.method || 'GET'}`;
+  
+  if (ongoingRequests.has(requestKey)) {
+    console.log(`Request for ${endpoint} already in progress, waiting...`);
+    return ongoingRequests.get(requestKey);
   }
+
+  // Create a new promise for this request
+  const requestPromise = new Promise<T>(async (resolve, reject) => {
+    try {
+      const url = `${API_BASE_URL}${endpoint}`;
+      console.log(`Fetching ${url}...`);
+      
+      const response = await fetch(url, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          ...options.headers,
+        },
+      });
+
+      // Check response content type to catch HTML errors
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('text/html')) {
+        console.error(`API returned HTML instead of JSON for ${endpoint}`);
+        throw new Error('Invalid response format (HTML)');
+      }
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ message: 'An unknown error occurred' }));
+        throw new Error(error.message || `API error: ${response.status}`);
+      }
+
+      const data = await response.json() as T;
+      resolve(data);
+    } catch (error) {
+      console.error(`API fetch error for ${endpoint}:`, error);
+      
+      // Return fallback data if provided
+      if (fallbackData !== undefined) {
+        console.log(`Using fallback data for ${endpoint}`);
+        resolve(fallbackData);
+      }
+      
+      // Special case for scholarships endpoint
+      else if (endpoint === '/scholarships' && Array.isArray(scholarshipsData)) {
+        console.log("Using local scholarships data");
+        resolve(scholarshipsData as unknown as T);
+      }
+      else if (endpoint.startsWith('/scholarships/') && Array.isArray(scholarshipsData)) {
+        // For single scholarship requests, find by ID
+        const id = endpoint.split('/').pop();
+        const scholarship = scholarshipsData.find(s => s.id === id);
+        if (scholarship) {
+          console.log(`Using local scholarship data for ID: ${id}`);
+          resolve(scholarship as unknown as T);
+        } else {
+          reject(error);
+        }
+      }
+      else {
+        reject(error);
+      }
+    } finally {
+      // Remove the request from ongoing requests
+      ongoingRequests.delete(requestKey);
+    }
+  });
+
+  // Store the promise
+  ongoingRequests.set(requestKey, requestPromise);
+  return requestPromise;
 }
+
+// Debounced version of getScholarships to prevent multiple requests
+const debouncedGetScholarships = debounce(() => {
+  return fetchApi<any[]>('/scholarships', {}, scholarshipsData);
+}, 300);
 
 // Authentication APIs
 export const loginWithEmailPassword = (email: string, password: string) => {
@@ -65,17 +114,23 @@ export const loginWithEmailPassword = (email: string, password: string) => {
 
 // Scholarship APIs
 export const getScholarships = () => {
-  return fetchApi<any[]>('/scholarships', {}, scholarshipsData);
+  return debouncedGetScholarships();
 };
 
 export const getScholarshipById = (id: string) => {
-  return fetchApi<any>(`/scholarships/${id}`);
+  return fetchApi<any>(`/scholarships/${id}`, {}, 
+    scholarshipsData.find(s => s.id === id)
+  );
 };
 
 export const createScholarship = (scholarshipData: any) => {
   return fetchApi<any>('/scholarships', {
     method: 'POST',
     body: JSON.stringify(scholarshipData),
+  }, {
+    id: `local-${Date.now()}`,
+    ...scholarshipData,
+    status: "open"
   });
 };
 
@@ -133,6 +188,11 @@ export const submitApplication = (applicationData: {
   return fetchApi<any>('/applications', {
     method: 'POST',
     body: JSON.stringify(applicationData),
+  }, {
+    id: `app-${Date.now()}`,
+    ...applicationData,
+    status: "pending",
+    submitted_at: new Date().toISOString()
   });
 };
 
@@ -155,6 +215,11 @@ export const recordTransaction = (transactionData: {
   return fetchApi<any>('/transactions', {
     method: 'POST',
     body: JSON.stringify(transactionData),
+  }, {
+    id: `tx-${Date.now()}`,
+    ...transactionData,
+    timestamp: new Date().toISOString(),
+    status: "completed"
   });
 };
 
@@ -175,15 +240,22 @@ export const createContract = (contractData: any) => {
   return fetchApi<any>('/contracts', {
     method: 'POST',
     body: JSON.stringify(contractData),
+  }, {
+    id: `contract-${Date.now()}`,
+    ...contractData,
+    created_at: new Date().toISOString()
   });
 };
 
 // Add a new function to get grants specifically
 export const getGrants = () => {
-  return fetchApi<any[]>('/scholarships', {}, scholarshipsData.filter(s => 
+  const grantsFilter = (s: any) => 
     s.title.toLowerCase().includes('grant') || 
-    s.description.toLowerCase().includes('grant')
-  ));
+    s.description.toLowerCase().includes('grant');
+    
+  return fetchApi<any[]>('/scholarships', {}, 
+    Array.isArray(scholarshipsData) ? scholarshipsData.filter(grantsFilter) : []
+  );
 };
 
 // Add a function to get scholarships by sponsor
