@@ -9,7 +9,7 @@ import secrets
 
 app = Flask(__name__)
 # Update CORS configuration to allow requests from any origin on all routes
-CORS(app, resources={r"/*": {"origins": "*"}}, 
+CORS(app, resources={r"/api/*": {"origins": "*"}}, 
      supports_credentials=True,
      allow_headers=["Content-Type", "Authorization", "X-Requested-With", "Accept"],
      methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -511,3 +511,4 @@ def get_user_transactions(user_address):
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
+
