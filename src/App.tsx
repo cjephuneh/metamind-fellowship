@@ -1,55 +1,39 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { WalletProvider } from "@/context/WalletContext";
-import { useState, useEffect } from "react";
-import { getApiKey } from "@/lib/localStorage";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
-import ConnectWallet from "./pages/ConnectWallet";
-import Register from "./pages/Register";
-import SignIn from "./pages/SignIn";
-import Dashboard from "./pages/Dashboard";
-import ScholarshipDetail from "./pages/ScholarshipDetail";
+import { ThemeProvider } from "@/components/ui/theme-provider";
+import { Toaster } from "@/components/ui/toaster";
+import Layout from "@/components/ui/layout";
+import Dashboard from "@/pages/Dashboard";
+import Index from "@/pages/Index";
+import ScholarshipDetail from "@/pages/ScholarshipDetail";
+import Register from "@/pages/Register";
+import ConnectWallet from "@/pages/ConnectWallet";
+import SignIn from "@/pages/SignIn";
+import NotFound from "@/pages/NotFound";
+import SmartContracts from "@/pages/SmartContracts";
 
-const queryClient = new QueryClient();
-
-const App = () => {
-  const [openAIApiKey, setOpenAIApiKey] = useState<string>("");
-
-  useEffect(() => {
-    // Load API key from localStorage on mount
-    const storedApiKey = getApiKey();
-    if (storedApiKey) {
-      setOpenAIApiKey(storedApiKey);
-    }
-  }, []);
-
+function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <WalletProvider>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/connect" element={<ConnectWallet />} />
-              <Route path="/signin" element={<SignIn />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/scholarships/:id" element={<ScholarshipDetail />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </WalletProvider>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
+    <ThemeProvider defaultTheme="light" storageKey="educhain-theme">
+      <Router>
+        <WalletProvider>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/connect" element={<ConnectWallet />} />
+            <Route path="/signin" element={<SignIn />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
+            <Route path="/scholarships/:id" element={<Layout><ScholarshipDetail /></Layout>} />
+            <Route path="/smart-contracts" element={<Layout><SmartContracts /></Layout>} />
+            <Route path="/404" element={<NotFound />} />
+            <Route path="*" element={<Navigate to="/404" replace />} />
+          </Routes>
+          <Toaster />
+        </WalletProvider>
+      </Router>
+    </ThemeProvider>
   );
-};
+}
 
 export default App;
