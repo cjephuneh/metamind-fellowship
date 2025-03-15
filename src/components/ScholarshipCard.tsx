@@ -66,6 +66,10 @@ const ScholarshipCard = ({ scholarship, userType, onApply }: ScholarshipProps) =
     setShowApplyModal(true);
   };
 
+  const handleCloseModal = () => {
+    setShowApplyModal(false);
+  };
+
   return (
     <>
       <Card className={`hover:shadow-md transition-all ${scholarship.status === "closed" ? "opacity-70" : "hover:border-purple-200"}`}>
@@ -163,12 +167,14 @@ const ScholarshipCard = ({ scholarship, userType, onApply }: ScholarshipProps) =
         </CardFooter>
       </Card>
       
-      <ApplyForGrantModal
-        isOpen={showApplyModal}
-        onClose={() => setShowApplyModal(false)}
-        scholarshipTitle={scholarship.title}
-        scholarshipId={scholarship.id}
-      />
+      {showApplyModal && (
+        <ApplyForGrantModal
+          isOpen={showApplyModal}
+          onClose={handleCloseModal}
+          scholarshipTitle={scholarship.title}
+          scholarshipId={scholarship.id}
+        />
+      )}
     </>
   );
 };

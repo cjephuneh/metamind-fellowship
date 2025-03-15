@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +13,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { FileUp, Plus, X } from "lucide-react";
+import { useWallet } from "@/context/WalletContext";
+import { submitApplication } from "@/lib/api";
 
 interface ApplyForGrantModalProps {
   isOpen: boolean;
@@ -29,6 +30,7 @@ const ApplyForGrantModal = ({
   scholarshipId,
 }: ApplyForGrantModalProps) => {
   const { toast } = useToast();
+  const { user } = useWallet();
   const [step, setStep] = useState(1);
   const [story, setStory] = useState("");
   const [files, setFiles] = useState<File[]>([]);
@@ -50,24 +52,50 @@ const ApplyForGrantModal = ({
   };
 
   const handleSubmit = async () => {
+    if (!user?.id) {
+      toast({
+        title: "Not Logged In",
+        description: "Please connect your wallet and log in to apply for scholarships.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setIsSubmitting(true);
     
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const fileRefs = files.map(file => file.name);
+      await submitApplication({
+        scholarshipId,
+        scholarshipTitle,
+        applicantId: user.id,
+        story,
+        contactEmail,
+        contactPhone,
+        documents: fileRefs
+      });
+      
       toast({
         title: "Application Submitted!",
         description: `Your application for ${scholarshipTitle} has been submitted successfully.`,
       });
-      setIsSubmitting(false);
-      onClose();
       
-      // Reset form
       setStep(1);
       setStory("");
       setFiles([]);
       setContactEmail("");
       setContactPhone("");
-    }, 1500);
+      onClose();
+    } catch (error) {
+      console.error("Error submitting application:", error);
+      toast({
+        title: "Submission Failed",
+        description: "There was an error submitting your application. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleNext = () => {
