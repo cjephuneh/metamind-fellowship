@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { WalletProvider } from "@/context/WalletContext";
 import { ThemeProvider } from "@/components/ui/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
+import DashboardLayout from "@/components/DashboardLayout";
 import Layout from "@/components/ui/layout";
 import Dashboard from "@/pages/Dashboard";
 import Index from "@/pages/Index";
@@ -12,6 +13,9 @@ import ConnectWallet from "@/pages/ConnectWallet";
 import SignIn from "@/pages/SignIn";
 import NotFound from "@/pages/NotFound";
 import SmartContracts from "@/pages/SmartContracts";
+import Analytics from "@/pages/Analytics";
+import Community from "@/pages/Community";
+import Wallet from "@/pages/Wallet";
 
 function App() {
   return (
@@ -23,9 +27,15 @@ function App() {
             <Route path="/connect" element={<ConnectWallet />} />
             <Route path="/signin" element={<SignIn />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
-            <Route path="/scholarships/:id" element={<Layout><ScholarshipDetail /></Layout>} />
-            <Route path="/smart-contracts" element={<Layout><SmartContracts /></Layout>} />
+            
+            {/* Dashboard Routes with Sidebar */}
+            <Route path="/dashboard" element={<DashboardLayout><Dashboard /></DashboardLayout>} />
+            <Route path="/scholarships/:id" element={<DashboardLayout><ScholarshipDetail /></DashboardLayout>} />
+            <Route path="/smart-contracts" element={<DashboardLayout><SmartContracts /></DashboardLayout>} />
+            <Route path="/analytics" element={<DashboardLayout><Analytics /></DashboardLayout>} />
+            <Route path="/community" element={<DashboardLayout><Community /></DashboardLayout>} />
+            <Route path="/wallet" element={<DashboardLayout><Wallet /></DashboardLayout>} />
+            
             <Route path="/404" element={<NotFound />} />
             <Route path="*" element={<Navigate to="/404" replace />} />
           </Routes>
