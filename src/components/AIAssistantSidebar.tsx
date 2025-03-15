@@ -1,5 +1,7 @@
+
 import { useState } from "react";
 import { askQwenAI, DEFAULT_TOGETHER_API_KEY } from "@/lib/togetherApi";
+import { askOpenAI } from "@/lib/openai";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,9 +16,11 @@ interface Message {
 
 interface AIAssistantSidebarProps {
   onClose: () => void;
+  apiKey?: string;
+  provider?: string;
 }
 
-const AIAssistantSidebar = ({ onClose }: AIAssistantSidebarProps) => {
+const AIAssistantSidebar = ({ onClose, apiKey = DEFAULT_TOGETHER_API_KEY, provider = "openai" }: AIAssistantSidebarProps) => {
   const { toast } = useToast();
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -45,18 +49,30 @@ const AIAssistantSidebar = ({ onClose }: AIAssistantSidebarProps) => {
         "If asked about technical blockchain concepts, explain them in simple terms. " +
         "Be encouraging to students applying for scholarships.";
 
-      // Get response from Together API with Qwen model
-      const response = await askQwenAI(
-        DEFAULT_TOGETHER_API_KEY,
-        systemPrompt,
-        input,
-        { model: "Qwen/Qwen1.5-7B-Chat" }
-      );
+      let response;
+      
+      if (provider === "openai") {
+        // Use OpenAI
+        response = await askOpenAI(
+          apiKey,
+          systemPrompt,
+          input,
+          { model: "gpt-3.5-turbo" }
+        );
+      } else {
+        // Use Together AI with Qwen model
+        response = await askQwenAI(
+          apiKey,
+          systemPrompt,
+          input,
+          { model: "Qwen/Qwen1.5-7B-Chat" }
+        );
+      }
 
       // Add assistant response to chat
       setMessages(prev => [...prev, { role: "assistant", content: response }]);
     } catch (error) {
-      console.error("Error with Together API:", error);
+      console.error(`Error with ${provider === "openai" ? "OpenAI" : "Together API"}:`, error);
       toast({
         variant: "destructive",
         title: "Error",

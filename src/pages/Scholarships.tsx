@@ -20,6 +20,7 @@ const Scholarships = () => {
   const [filterType, setFilterType] = useState("all");
   const [sortBy, setSortBy] = useState("deadline");
   const [showAssistant, setShowAssistant] = useState(false);
+  const [openaiKey, setOpenaiKey] = useState("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");
   
   useEffect(() => {
     const fetchScholarships = async () => {
@@ -215,6 +216,8 @@ const Scholarships = () => {
             <AIAssistant 
               context="scholarships applications grants funding"
               onClose={() => setShowAssistant(false)}
+              apiKey={openaiKey}
+              provider="openai"
             />
           </div>
         ) : (

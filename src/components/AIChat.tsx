@@ -1,14 +1,17 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { askQwenAI, DEFAULT_TOGETHER_API_KEY } from "@/lib/togetherApi";
+import { askOpenAI } from "@/lib/openai";
 import { Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface AIChatProps {
   apiKey?: string;
+  provider?: string;
 }
 
 const SYSTEM_PROMPT = `You are a helpful assistant for MetaMind Fellowship, a blockchain-based scholarship platform. 
@@ -16,7 +19,7 @@ You help users navigate the platform, understand how to apply for scholarships, 
 Your responses should be concise, helpful, and encouraging. If you don't know the answer to something,
 be honest about it.`;
 
-const AIChat: React.FC<AIChatProps> = ({ apiKey = DEFAULT_TOGETHER_API_KEY }) => {
+const AIChat: React.FC<AIChatProps> = ({ apiKey = DEFAULT_TOGETHER_API_KEY, provider = "together" }) => {
   const [input, setInput] = useState("");
   const [conversation, setConversation] = useState<{ role: "user" | "assistant"; content: string }[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -33,11 +36,21 @@ const AIChat: React.FC<AIChatProps> = ({ apiKey = DEFAULT_TOGETHER_API_KEY }) =>
     setIsLoading(true);
     
     try {
-      // Get response from Together API using Qwen model
-      const response = await askQwenAI(apiKey, SYSTEM_PROMPT, userMessage, {
-        model: "Qwen/Qwen1.5-7B-Chat",
-        temperature: 0.7,
-      });
+      let response;
+      
+      if (provider === "openai") {
+        // Use OpenAI
+        response = await askOpenAI(apiKey, SYSTEM_PROMPT, userMessage, {
+          model: "gpt-3.5-turbo",
+          temperature: 0.7,
+        });
+      } else {
+        // Use Together AI with Qwen model
+        response = await askQwenAI(apiKey, SYSTEM_PROMPT, userMessage, {
+          model: "Qwen/Qwen1.5-7B-Chat",
+          temperature: 0.7,
+        });
+      }
       
       // Add assistant response to conversation
       setConversation(prev => [...prev, { role: "assistant", content: response }]);
@@ -45,7 +58,7 @@ const AIChat: React.FC<AIChatProps> = ({ apiKey = DEFAULT_TOGETHER_API_KEY }) =>
       console.error("Error getting response:", error);
       toast({
         title: "Error",
-        description: "Failed to get a response. Please try again.",
+        description: `Failed to get a response from ${provider === "openai" ? "OpenAI" : "Together AI"}. Please try again.`,
         variant: "destructive",
       });
     } finally {

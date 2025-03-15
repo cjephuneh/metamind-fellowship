@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -6,10 +7,13 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Sparkles, SendHorizonal, Info } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { askQwenAI, DEFAULT_TOGETHER_API_KEY } from "@/lib/togetherApi";
+import { askOpenAI } from "@/lib/openai";
 
 interface AIAssistantProps {
   context?: string;
   onClose?: () => void;
+  apiKey?: string;
+  provider?: string;
 }
 
 // Define a type for the conversation messages
@@ -19,7 +23,12 @@ type ConversationMessage = {
   timestamp?: Date;
 };
 
-const AIAssistant = ({ context = "scholarship application", onClose }: AIAssistantProps) => {
+const AIAssistant = ({ 
+  context = "scholarship application", 
+  onClose, 
+  apiKey = DEFAULT_TOGETHER_API_KEY, 
+  provider = "openai" 
+}: AIAssistantProps) => {
   const { toast } = useToast();
   const [message, setMessage] = useState("");
   const [conversation, setConversation] = useState<ConversationMessage[]>([
@@ -39,7 +48,7 @@ const AIAssistant = ({ context = "scholarship application", onClose }: AIAssista
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [conversation]);
 
-  // Get AI response from Together API with Qwen model
+  // Get AI response based on selected provider
   const getAIResponse = async (userMessage: string): Promise<string> => {
     try {
       // Prepare system prompt with context about the app
@@ -51,15 +60,24 @@ const AIAssistant = ({ context = "scholarship application", onClose }: AIAssista
         "If asked about technical blockchain concepts, explain them in simple terms. " +
         "Be encouraging to students applying for scholarships.";
 
-      // Get response from Together API
-      return await askQwenAI(
-        DEFAULT_TOGETHER_API_KEY,
-        systemPrompt,
-        userMessage,
-        { model: "Qwen/Qwen1.5-7B-Chat" }
-      );
+      // Get response from selected AI provider
+      if (provider === "openai") {
+        return await askOpenAI(
+          apiKey,
+          systemPrompt,
+          userMessage,
+          { model: "gpt-3.5-turbo" }
+        );
+      } else {
+        return await askQwenAI(
+          apiKey,
+          systemPrompt,
+          userMessage,
+          { model: "Qwen/Qwen1.5-7B-Chat" }
+        );
+      }
     } catch (error) {
-      console.error("Error with Together API:", error);
+      console.error(`Error with ${provider === "openai" ? "OpenAI" : "Together API"}:`, error);
       throw error;
     }
   };

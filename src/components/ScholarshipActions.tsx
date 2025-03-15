@@ -15,7 +15,8 @@ interface ScholarshipActionsProps {
   recipientAddress: string;
   recipientName: string;
   apiKey?: string;
-  setApiKey?: (key: string) => void;
+  setApiKey?: (key: string, provider: string) => void;
+  provider?: string;
 }
 
 const ScholarshipActions: React.FC<ScholarshipActionsProps> = ({
@@ -24,6 +25,7 @@ const ScholarshipActions: React.FC<ScholarshipActionsProps> = ({
   recipientName,
   apiKey = DEFAULT_TOGETHER_API_KEY,
   setApiKey,
+  provider = "together",
 }) => {
   const [showAIChat, setShowAIChat] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -31,9 +33,9 @@ const ScholarshipActions: React.FC<ScholarshipActionsProps> = ({
   const { isConnected, account, userType } = useWallet();
   const { toast } = useToast();
 
-  const handleSaveApiKey = (newApiKey: string) => {
+  const handleSaveApiKey = (newApiKey: string, newProvider: string) => {
     if (setApiKey) {
-      setApiKey(newApiKey);
+      setApiKey(newApiKey, newProvider);
     }
   };
 
@@ -101,7 +103,7 @@ const ScholarshipActions: React.FC<ScholarshipActionsProps> = ({
           
           {showAIChat && (
             <div className="mt-4">
-              <AIChat apiKey={apiKey} />
+              <AIChat apiKey={apiKey} provider={provider} />
             </div>
           )}
         </CardContent>
@@ -112,6 +114,7 @@ const ScholarshipActions: React.FC<ScholarshipActionsProps> = ({
         onClose={() => setShowSettings(false)}
         apiKey={apiKey || ""}
         onSave={handleSaveApiKey}
+        provider={provider}
       />
       
       <SendFundsModal
