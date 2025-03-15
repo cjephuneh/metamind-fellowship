@@ -1,10 +1,9 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { askOpenAI } from "@/lib/openai";
+import { askQwenAI, DEFAULT_TOGETHER_API_KEY } from "@/lib/togetherApi";
 import { Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -17,7 +16,7 @@ You help users navigate the platform, understand how to apply for scholarships, 
 Your responses should be concise, helpful, and encouraging. If you don't know the answer to something,
 be honest about it.`;
 
-const AIChat: React.FC<AIChatProps> = ({ apiKey }) => {
+const AIChat: React.FC<AIChatProps> = ({ apiKey = DEFAULT_TOGETHER_API_KEY }) => {
   const [input, setInput] = useState("");
   const [conversation, setConversation] = useState<{ role: "user" | "assistant"; content: string }[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -27,15 +26,6 @@ const AIChat: React.FC<AIChatProps> = ({ apiKey }) => {
     e.preventDefault();
     if (!input.trim()) return;
     
-    if (!apiKey) {
-      toast({
-        title: "API Key Missing",
-        description: "Please provide an OpenAI API key in settings.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
     // Add user message to conversation
     const userMessage = input.trim();
     setConversation(prev => [...prev, { role: "user", content: userMessage }]);
@@ -43,9 +33,9 @@ const AIChat: React.FC<AIChatProps> = ({ apiKey }) => {
     setIsLoading(true);
     
     try {
-      // Get response from OpenAI
-      const response = await askOpenAI(apiKey, SYSTEM_PROMPT, userMessage, {
-        model: "gpt-3.5-turbo",
+      // Get response from Together API using Qwen model
+      const response = await askQwenAI(apiKey, SYSTEM_PROMPT, userMessage, {
+        model: "Qwen/Qwen1.5-7B-Chat",
         temperature: 0.7,
       });
       

@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { DEFAULT_TOGETHER_API_KEY } from "@/lib/togetherApi";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -21,7 +22,7 @@ interface SettingsModalProps {
 }
 
 const SettingsModal = ({ isOpen, onClose, apiKey, onSave }: SettingsModalProps) => {
-  const [inputApiKey, setInputApiKey] = useState(apiKey);
+  const [inputApiKey, setInputApiKey] = useState(apiKey || DEFAULT_TOGETHER_API_KEY);
   const { toast } = useToast();
 
   const handleSave = () => {
@@ -44,13 +45,13 @@ const SettingsModal = ({ isOpen, onClose, apiKey, onSave }: SettingsModalProps) 
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
-            <Label htmlFor="apiKey">OpenAI API Key</Label>
+            <Label htmlFor="apiKey">Together AI API Key</Label>
             <Input
               id="apiKey"
               type="password"
               value={inputApiKey}
               onChange={(e) => setInputApiKey(e.target.value)}
-              placeholder="sk-..."
+              placeholder="tgp_v1_..."
             />
             <p className="text-xs text-muted-foreground">
               Your API key is stored locally and never sent to our servers.

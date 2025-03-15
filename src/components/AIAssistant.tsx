@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -6,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Sparkles, SendHorizonal, Info } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { askQwenAI, DEFAULT_TOGETHER_API_KEY } from "@/lib/togetherApi";
 
 interface AIAssistantProps {
   context?: string;
@@ -39,48 +39,27 @@ const AIAssistant = ({ context = "scholarship application", onClose }: AIAssista
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [conversation]);
 
-  // Get AI response from Gemini API
-  const getGeminiResponse = async (userMessage: string): Promise<string> => {
+  // Get AI response from Together API with Qwen model
+  const getAIResponse = async (userMessage: string): Promise<string> => {
     try {
-      const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": "AIzaSyAdHdGR1_fm5G-AI1XpB-yZk-KMPXdVgjQ"
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: "user",
-              parts: [
-                {
-                  text: `You are a helpful AI assistant for a blockchain-based scholarship platform. 
-                  You provide information about scholarship applications, eligibility, and how to use the platform.
-                  
-                  Answer the following question concisely and accurately: ${userMessage}`
-                }
-              ]
-            }
-          ],
-          generationConfig: {
-            temperature: 0.7,
-            topK: 40,
-            topP: 0.95,
-            maxOutputTokens: 800,
-          }
-        })
-      });
+      // Prepare system prompt with context about the app
+      const systemPrompt = 
+        "You are an AI assistant for EduChain, a blockchain-based scholarship platform. " +
+        `You are currently helping with ${context}. ` +
+        "Help users with scholarship applications, understanding smart contracts, and " +
+        "navigating the platform. Keep responses concise, accurate, and supportive. " +
+        "If asked about technical blockchain concepts, explain them in simple terms. " +
+        "Be encouraging to students applying for scholarships.";
 
-      const data = await response.json();
-      
-      if (data.error) {
-        console.error("Gemini API error:", data.error);
-        throw new Error(data.error.message || "Failed to get response from Gemini");
-      }
-      
-      return data.candidates[0].content.parts[0].text;
+      // Get response from Together API
+      return await askQwenAI(
+        DEFAULT_TOGETHER_API_KEY,
+        systemPrompt,
+        userMessage,
+        { model: "Qwen/Qwen1.5-7B-Chat" }
+      );
     } catch (error) {
-      console.error("Error calling Gemini API:", error);
+      console.error("Error with Together API:", error);
       throw error;
     }
   };
@@ -105,8 +84,8 @@ const AIAssistant = ({ context = "scholarship application", onClose }: AIAssista
     setIsThinking(true);
     
     try {
-      // Get Gemini response
-      const aiResponse = await getGeminiResponse(message);
+      // Get AI response
+      const aiResponse = await getAIResponse(message);
       
       setConversation([
         ...updatedConversation,

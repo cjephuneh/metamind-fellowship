@@ -8,21 +8,21 @@ import { useToast } from "@/hooks/use-toast";
 import AIChat from "./AIChat";
 import SettingsModal from "./SettingsModal";
 import SendFundsModal from "./SendFundsModal";
-import { saveApiKey } from "@/lib/localStorage";
+import { DEFAULT_TOGETHER_API_KEY } from "@/lib/togetherApi";
 
 interface ScholarshipActionsProps {
   scholarshipId: string;
   recipientAddress: string;
   recipientName: string;
-  apiKey: string;
-  setApiKey: (key: string) => void;
+  apiKey?: string;
+  setApiKey?: (key: string) => void;
 }
 
 const ScholarshipActions: React.FC<ScholarshipActionsProps> = ({
   scholarshipId,
   recipientAddress,
   recipientName,
-  apiKey,
+  apiKey = DEFAULT_TOGETHER_API_KEY,
   setApiKey,
 }) => {
   const [showAIChat, setShowAIChat] = useState(false);
@@ -32,8 +32,9 @@ const ScholarshipActions: React.FC<ScholarshipActionsProps> = ({
   const { toast } = useToast();
 
   const handleSaveApiKey = (newApiKey: string) => {
-    setApiKey(newApiKey);
-    saveApiKey(newApiKey);
+    if (setApiKey) {
+      setApiKey(newApiKey);
+    }
   };
 
   const handleSendFunds = () => {
@@ -109,7 +110,7 @@ const ScholarshipActions: React.FC<ScholarshipActionsProps> = ({
       <SettingsModal
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
-        apiKey={apiKey}
+        apiKey={apiKey || ""}
         onSave={handleSaveApiKey}
       />
       

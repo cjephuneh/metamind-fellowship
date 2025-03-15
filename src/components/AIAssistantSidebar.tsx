@@ -1,6 +1,5 @@
-
 import { useState } from "react";
-import { askOpenAI } from "@/lib/openai";
+import { askQwenAI, DEFAULT_TOGETHER_API_KEY } from "@/lib/togetherApi";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -46,18 +45,18 @@ const AIAssistantSidebar = ({ onClose }: AIAssistantSidebarProps) => {
         "If asked about technical blockchain concepts, explain them in simple terms. " +
         "Be encouraging to students applying for scholarships.";
 
-      // Get response from OpenAI
-      const response = await askOpenAI(
-        "sk-demo123", // This should be replaced with a proper API key management solution
+      // Get response from Together API with Qwen model
+      const response = await askQwenAI(
+        DEFAULT_TOGETHER_API_KEY,
         systemPrompt,
         input,
-        { model: "gpt-3.5-turbo" }
+        { model: "Qwen/Qwen1.5-7B-Chat" }
       );
 
       // Add assistant response to chat
       setMessages(prev => [...prev, { role: "assistant", content: response }]);
     } catch (error) {
-      console.error("Error with OpenAI API:", error);
+      console.error("Error with Together API:", error);
       toast({
         variant: "destructive",
         title: "Error",
