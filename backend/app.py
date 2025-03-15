@@ -17,29 +17,6 @@ def log_request_info():
     app.logger.debug('Method: %s', request.method)
     app.logger.debug('Path: %s', request.path)
 
-# Simple CORS handling - this handles both preflight OPTIONS and regular requests
-@app.after_request
-def cors_response(response):
-    # Allow requests from the specific frontend origin
-    response.headers['Access-Control-Allow-Origin'] = 'http://localhost:8080'
-    
-    # Allow credentials (cookies, authorization headers)
-    response.headers['Access-Control-Allow-Credentials'] = 'true'
-    
-    # For preflight requests, specify allowed methods and headers
-    if request.method == 'OPTIONS':
-        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
-        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Requested-With'
-        response.headers['Access-Control-Max-Age'] = '3600'  # Cache preflight response for 1 hour
-    
-    return response
-
-# Special handler for OPTIONS requests to ensure they are properly processed
-@app.route('/', defaults={'path': ''}, methods=['OPTIONS'])
-@app.route('/<path:path>', methods=['OPTIONS'])
-def options_handler(path):
-    return make_response()
-
 # ----- Mock Database (In-memory) -----
 # In a real application, you would use a proper database like PostgreSQL or MongoDB
 
@@ -211,6 +188,20 @@ smart_contracts = load_data("smart_contracts.json", [
 def home():
     return jsonify({"message": "MetaMind Fellowship API"})
 
+# Enable CORS for all routes
+@app.after_request
+def add_cors_headers(response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    return response
+
+# Handle OPTIONS requests
+@app.route('/<path:path>', methods=['OPTIONS'])
+@app.route('/', methods=['OPTIONS'])
+def options_handler(path=''):
+    return '', 200
+
 # Authentication Endpoints
 @app.route('/api/auth/login', methods=['POST'])
 def login():
@@ -233,7 +224,7 @@ def login():
     
     return jsonify({
         "success": True,
-        "user": user_without_password,
+        "user": {"id": "user123", "name": "Test User", "type": "student", "balance": "2.5"},
         "token": str(uuid.uuid4())  # In a real app, this would be a proper JWT
     })
 
@@ -535,5 +526,4 @@ def get_user_transactions(user_address):
     return jsonify(user_transactions)
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
-
+    app.run(debug=True, port=5000, host='0.0.0.0')

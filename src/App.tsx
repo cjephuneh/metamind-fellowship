@@ -16,6 +16,8 @@ import SmartContracts from "@/pages/SmartContracts";
 import Analytics from "@/pages/Analytics";
 import Community from "@/pages/Community";
 import Wallet from "@/pages/Wallet";
+import Scholarships from "@/pages/Scholarships";
+import Grants from "@/pages/Grants";
 
 function App() {
   return (
@@ -30,6 +32,8 @@ function App() {
             
             {/* Dashboard Routes with Sidebar */}
             <Route path="/dashboard" element={<DashboardLayout><Dashboard /></DashboardLayout>} />
+            <Route path="/scholarships" element={<DashboardLayout><Scholarships /></DashboardLayout>} />
+            <Route path="/grants" element={<DashboardLayout><Grants /></DashboardLayout>} />
             <Route path="/scholarships/:id" element={<DashboardLayout><ScholarshipDetail /></DashboardLayout>} />
             <Route path="/smart-contracts" element={<DashboardLayout><SmartContracts /></DashboardLayout>} />
             <Route path="/analytics" element={<DashboardLayout><Analytics /></DashboardLayout>} />

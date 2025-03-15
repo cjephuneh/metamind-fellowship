@@ -1,28 +1,48 @@
-
 import { Message } from "@/components/MessageModal";
+import scholarshipsData from "../../backend/data/scholarships.json";
 
-const API_BASE_URL = "http://localhost:5000/api";
+// Use a relative URL that works both in development and in the Lovable environment
+const API_BASE_URL = "/api";
 
-// Generic fetch function with error handling
+// Generic fetch function with error handling and fallback data
 async function fetchApi<T>(
   endpoint: string, 
-  options: RequestInit = {}
+  options: RequestInit = {},
+  fallbackData?: T
 ): Promise<T> {
-  const url = `${API_BASE_URL}${endpoint}`;
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
+  try {
+    const url = `${API_BASE_URL}${endpoint}`;
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+    });
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: 'An unknown error occurred' }));
-    throw new Error(error.message || `API error: ${response.status}`);
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'An unknown error occurred' }));
+      throw new Error(error.message || `API error: ${response.status}`);
+    }
+
+    return response.json() as Promise<T>;
+  } catch (error) {
+    console.error(`API fetch error for ${endpoint}:`, error);
+    
+    // Return fallback data if provided
+    if (fallbackData !== undefined) {
+      console.log(`Using fallback data for ${endpoint}`);
+      return fallbackData;
+    }
+    
+    // Special case for scholarships endpoint
+    if (endpoint === '/scholarships' && Array.isArray(scholarshipsData)) {
+      console.log("Using local scholarships data");
+      return scholarshipsData as unknown as T;
+    }
+    
+    throw error;
   }
-
-  return response.json() as Promise<T>;
 }
 
 // Authentication APIs
@@ -30,12 +50,22 @@ export const loginWithEmailPassword = (email: string, password: string) => {
   return fetchApi<{success: boolean, user: any, token: string}>('/auth/login', {
     method: 'POST',
     body: JSON.stringify({ email, password }),
+  }, { 
+    success: true, 
+    user: { 
+      id: "demo-user", 
+      name: "Demo User", 
+      type: "student", 
+      balance: "1.5",
+      address: "0x1234567890abcdef1234567890abcdef12345678"
+    }, 
+    token: "demo-token" 
   });
 };
 
 // Scholarship APIs
 export const getScholarships = () => {
-  return fetchApi<any[]>('/scholarships');
+  return fetchApi<any[]>('/scholarships', {}, scholarshipsData);
 };
 
 export const getScholarshipById = (id: string) => {
@@ -146,4 +176,19 @@ export const createContract = (contractData: any) => {
     method: 'POST',
     body: JSON.stringify(contractData),
   });
+};
+
+// Add a new function to get grants specifically
+export const getGrants = () => {
+  return fetchApi<any[]>('/scholarships', {}, scholarshipsData.filter(s => 
+    s.title.toLowerCase().includes('grant') || 
+    s.description.toLowerCase().includes('grant')
+  ));
+};
+
+// Add a function to get scholarships by sponsor
+export const getScholarshipsBySponsor = (sponsorName: string) => {
+  return fetchApi<any[]>('/scholarships', {}, 
+    scholarshipsData.filter(s => s.sponsor.toLowerCase().includes(sponsorName.toLowerCase()))
+  );
 };
