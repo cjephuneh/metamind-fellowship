@@ -1,0 +1,42 @@
+[
+  {
+    "id": "cf473f7d-ab6f-457e-ad63-cac8dab211e0",
+    "title": "STEM Innovation Grant",
+    "sponsor": "TechFuture Foundation",
+    "amount": 5000,
+    "deadline": "2025-04-14T03:48:15.464779",
+    "status": "open",
+    "description": "Supporting innovative projects in science, technology, engineering, and mathematics fields.",
+    "requirements": "Undergraduate students with GPA 3.5 or above. Must submit project proposal."
+  },
+  {
+    "id": "170d0c52-2ac0-43b1-ae8d-f7850a7029d7",
+    "title": "Arts and Humanities Fellowship",
+    "sponsor": "Cultural Heritage Fund",
+    "amount": 3500,
+    "deadline": "2025-05-14T03:48:15.464807",
+    "status": "open",
+    "description": "Supporting students pursuing degrees in arts, literature, history, and related fields.",
+    "requirements": "Open to all undergraduate and graduate students. Portfolio submission required."
+  },
+  {
+    "id": "924f02a7-b372-4fcf-9693-1a556b2293ea",
+    "title": "Community Leadership Scholarship",
+    "sponsor": "Civic Engagement Initiative",
+    "amount": 2500,
+    "deadline": "2025-03-20T03:48:15.464818",
+    "status": "open",
+    "description": "Recognizing students who have demonstrated exceptional leadership in community service.",
+    "requirements": "Minimum 100 hours of community service. Two recommendation letters required."
+  },
+  {
+    "id": "8769cad4-31f4-4235-a813-184f75432f2f",
+    "title": "Environmental Research Grant",
+    "sponsor": "Green Earth Foundation",
+    "amount": 4500,
+    "deadline": "2025-02-28T03:48:15.464827",
+    "status": "closed",
+    "description": "Funding for research projects focused on environmental sustainability and conservation.",
+    "requirements": "Graduate students in environmental science or related fields. Research proposal required."
+  }
+]

@@ -1,0 +1,20 @@
+[
+  {
+    "id": "64af86e8-3bbe-4f2f-b8a1-7c89cc41895b",
+    "address": "0x1234567890abcdef1234567890abcdef12345678",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "type": "student",
+    "balance": "0.5",
+    "created_at": "2025-01-29T03:48:15.465355"
+  },
+  {
+    "id": "0523dcb1-2d7b-4bb5-bac3-bd5fffe1f5ab",
+    "address": "0xabcdef1234567890abcdef1234567890abcdef12",
+    "name": "Tech Foundation",
+    "email": "foundation@tech.org",
+    "type": "sponsor",
+    "balance": "10.2",
+    "created_at": "2024-12-15T03:48:15.465393"
+  }
+]

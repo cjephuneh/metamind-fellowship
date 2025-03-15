@@ -1,0 +1,30 @@
+[
+  {
+    "id": "a41a685c-9065-44eb-bc97-734afd125a03",
+    "sender": {
+      "id": "0523dcb1-2d7b-4bb5-bac3-bd5fffe1f5ab",
+      "name": "Tech Foundation"
+    },
+    "recipient": {
+      "id": "64af86e8-3bbe-4f2f-b8a1-7c89cc41895b",
+      "name": "John Doe"
+    },
+    "content": "Congratulations! Your application for the STEM Innovation Grant has been shortlisted. Please schedule an interview with our team in the next week.",
+    "timestamp": "2025-03-13T03:48:15.465826",
+    "read": false
+  },
+  {
+    "id": "eec7b3b3-7e57-4586-a01a-3b67862d3550",
+    "sender": {
+      "id": "0523dcb1-2d7b-4bb5-bac3-bd5fffe1f5ab",
+      "name": "Tech Foundation"
+    },
+    "recipient": {
+      "id": "64af86e8-3bbe-4f2f-b8a1-7c89cc41895b",
+      "name": "John Doe"
+    },
+    "content": "We're pleased to inform you that your project proposal has received positive feedback from our review committee. We'd like to discuss potential funding options for your initiative.",
+    "timestamp": "2025-03-08T03:48:15.465857",
+    "read": true
+  }
+]
