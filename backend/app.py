@@ -1,5 +1,5 @@
-from flask import Flask, jsonify, request
-from flask_cors import CORS
+from flask import Flask, jsonify, request, make_response
+# Remove Flask-CORS import completely
 import os
 import json
 from datetime import datetime, timedelta
@@ -8,12 +8,37 @@ import hashlib
 import secrets
 
 app = Flask(__name__)
-# Update CORS configuration to allow requests from any origin on all routes
-CORS(app, resources={r"/*": {"origins": "*"}}, 
-     supports_credentials=True,
-     allow_headers=["Content-Type", "Authorization", "X-Requested-With", "Accept"],
-     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-     expose_headers=["Content-Type", "Authorization"])
+
+# Debugging middleware to log incoming requests
+@app.before_request
+def log_request_info():
+    app.logger.debug('Headers: %s', request.headers)
+    app.logger.debug('Body: %s', request.get_data())
+    app.logger.debug('Method: %s', request.method)
+    app.logger.debug('Path: %s', request.path)
+
+# Simple CORS handling - this handles both preflight OPTIONS and regular requests
+@app.after_request
+def cors_response(response):
+    # Allow requests from the specific frontend origin
+    response.headers['Access-Control-Allow-Origin'] = 'http://localhost:8080'
+    
+    # Allow credentials (cookies, authorization headers)
+    response.headers['Access-Control-Allow-Credentials'] = 'true'
+    
+    # For preflight requests, specify allowed methods and headers
+    if request.method == 'OPTIONS':
+        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Requested-With'
+        response.headers['Access-Control-Max-Age'] = '3600'  # Cache preflight response for 1 hour
+    
+    return response
+
+# Special handler for OPTIONS requests to ensure they are properly processed
+@app.route('/', defaults={'path': ''}, methods=['OPTIONS'])
+@app.route('/<path:path>', methods=['OPTIONS'])
+def options_handler(path):
+    return make_response()
 
 # ----- Mock Database (In-memory) -----
 # In a real application, you would use a proper database like PostgreSQL or MongoDB
