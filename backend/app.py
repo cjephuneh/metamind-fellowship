@@ -8,8 +8,12 @@ import hashlib
 import secrets
 
 app = Flask(__name__)
-# Enable CORS for all routes and origins
-CORS(app, resources={r"/api/*": {"origins": "*"}})
+# Update CORS configuration to allow requests from any origin on all routes
+CORS(app, resources={r"/*": {"origins": "*"}}, 
+     supports_credentials=True,
+     allow_headers=["Content-Type", "Authorization", "X-Requested-With", "Accept"],
+     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+     expose_headers=["Content-Type", "Authorization"])
 
 # ----- Mock Database (In-memory) -----
 # In a real application, you would use a proper database like PostgreSQL or MongoDB
