@@ -25,7 +25,7 @@ export const askQwenAI = async (
     temperature?: number;
     max_tokens?: number;
   } = {}
-): Promise<string> {
+): Promise<string> => {
   const { 
     model = "Qwen/Qwen1.5-7B-Chat", 
     temperature = 0.7, 
