@@ -2,7 +2,7 @@ import { Message } from "@/components/MessageModal";
 import scholarshipsData from "../../backend/data/scholarships.json";
 import { debounce } from "lodash";
 
-const API_BASE_URL = "https://hzsvq5jw-5000.inc1.devtunnels.ms/api";
+const API_BASE_URL = "https://hzsvq5jw-5001.inc1.devtunnels.ms/api";
 
 // Keep track of ongoing requests to prevent duplicates
 const ongoingRequests = new Map();
