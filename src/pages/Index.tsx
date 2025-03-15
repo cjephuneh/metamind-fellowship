@@ -1,8 +1,7 @@
-
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { GraduationCap, BookOpen, Wallet, Building2 } from "lucide-react";
+import { GraduationCap, BookOpen, Wallet, Building2, User } from "lucide-react";
 import MainNavigation from "@/components/MainNavigation";
 
 const Index = () => {

@@ -133,7 +133,11 @@ const Dashboard = () => {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {openScholarships.map((scholarship) => (
-                    <ScholarshipCard key={scholarship.id} scholarship={scholarship} />
+                    <ScholarshipCard 
+                      key={scholarship.id} 
+                      scholarship={scholarship} 
+                      userType={user?.type || "student"}
+                    />
                   ))}
                 </div>
               )}
@@ -152,7 +156,11 @@ const Dashboard = () => {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {closedScholarships.map((scholarship) => (
-                    <ScholarshipCard key={scholarship.id} scholarship={scholarship} />
+                    <ScholarshipCard 
+                      key={scholarship.id} 
+                      scholarship={scholarship} 
+                      userType={user?.type || "student"}
+                    />
                   ))}
                 </div>
               )}
