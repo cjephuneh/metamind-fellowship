@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useWallet } from "@/context/WalletContext";
 import { Toaster } from "@/components/ui/toaster";
 import { Button } from "@/components/ui/button";
@@ -65,12 +65,19 @@ interface DashboardLayoutProps {
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const { user, disconnectWallet } = useWallet();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const [showAIAssistant, setShowAIAssistant] = useState(false);
 
-  // Redirect to sign in if not authenticated
+  // Use useEffect for navigation to avoid React warnings
+  useEffect(() => {
+    if (!user) {
+      navigate("/signin");
+    }
+  }, [user, navigate]);
+
+  // Return early if no user to prevent render issues
   if (!user) {
-    navigate("/signin");
     return null;
   }
 

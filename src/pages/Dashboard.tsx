@@ -45,7 +45,7 @@ const Dashboard = () => {
       try {
         // Fetch scholarships
         const scholarshipsData = await getScholarships();
-        setScholarships(scholarshipsData);
+        setScholarships(scholarshipsData || []);
         setLoadingStatus(prev => ({ ...prev, scholarships: false }));
         
         // Fetch user-specific data if user is logged in
@@ -54,9 +54,10 @@ const Dashboard = () => {
           if (user.type === "student") {
             try {
               const applicationsData = await getUserApplications(user.id);
-              setApplications(applicationsData);
+              setApplications(applicationsData || []);
             } catch (error) {
               console.error("Failed to fetch applications:", error);
+              setApplications([]);
             } finally {
               setLoadingStatus(prev => ({ ...prev, applications: false }));
             }
@@ -65,9 +66,10 @@ const Dashboard = () => {
           // Fetch messages
           try {
             const messagesData = await getUserMessages(user.id);
-            setMessages(messagesData);
+            setMessages(messagesData || []);
           } catch (error) {
             console.error("Failed to fetch messages:", error);
+            setMessages([]);
           } finally {
             setLoadingStatus(prev => ({ ...prev, messages: false }));
           }
@@ -76,9 +78,10 @@ const Dashboard = () => {
           if (user.address) {
             try {
               const transactionsData = await getUserTransactions(user.address);
-              setTransactions(transactionsData);
+              setTransactions(transactionsData || []);
             } catch (error) {
               console.error("Failed to fetch transactions:", error);
+              setTransactions([]);
             } finally {
               setLoadingStatus(prev => ({ ...prev, transactions: false }));
             }
@@ -86,6 +89,7 @@ const Dashboard = () => {
         }
       } catch (error) {
         console.error("Failed to fetch scholarships:", error);
+        setScholarships([]);
       } finally {
         setIsLoading(false);
       }
@@ -94,16 +98,26 @@ const Dashboard = () => {
     fetchData();
   }, [user, refreshBalance]);
 
-  // Filter scholarships based on status
-  const openScholarships = scholarships.filter((s) => s.status === "open");
-  const closedScholarships = scholarships.filter((s) => s.status === "closed");
+  // Filter scholarships based on status - ensure scholarships is an array before filtering
+  const openScholarships = scholarships && Array.isArray(scholarships) 
+    ? scholarships.filter((s) => s.status === "open") 
+    : [];
+  const closedScholarships = scholarships && Array.isArray(scholarships) 
+    ? scholarships.filter((s) => s.status === "closed") 
+    : [];
   
-  // Calculate unread messages
-  const unreadMessages = messages.filter(msg => !msg.read).length;
+  // Calculate unread messages - ensure messages is an array before filtering
+  const unreadMessages = messages && Array.isArray(messages) 
+    ? messages.filter(msg => !msg.read).length 
+    : 0;
   
-  // Calculate application stats
-  const pendingApplications = applications.filter(app => app.status === "pending").length;
-  const approvedApplications = applications.filter(app => app.status === "approved").length;
+  // Calculate application stats - ensure applications is an array before filtering
+  const pendingApplications = applications && Array.isArray(applications) 
+    ? applications.filter(app => app.status === "pending").length 
+    : 0;
+  const approvedApplications = applications && Array.isArray(applications) 
+    ? applications.filter(app => app.status === "approved").length 
+    : 0;
   
   // Calculate scholarship usage
   const scholarshipUsage = user?.type === "student" ? 65 : 40; // Mock percentage
