@@ -25,6 +25,14 @@ async function fetchApi<T>(
   return response.json() as Promise<T>;
 }
 
+// Authentication APIs
+export const loginWithEmailPassword = (email: string, password: string) => {
+  return fetchApi<{success: boolean, user: any, token: string}>('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
+  });
+};
+
 // Scholarship APIs
 export const getScholarships = () => {
   return fetchApi<any[]>('/scholarships');
@@ -122,4 +130,20 @@ export const recordTransaction = (transactionData: {
 
 export const getUserTransactions = (userAddress: string) => {
   return fetchApi<any[]>(`/transactions/${userAddress}`);
+};
+
+// Smart Contract APIs
+export const getContracts = () => {
+  return fetchApi<any[]>('/contracts');
+};
+
+export const getContractById = (id: string) => {
+  return fetchApi<any>(`/contracts/${id}`);
+};
+
+export const createContract = (contractData: any) => {
+  return fetchApi<any>('/contracts', {
+    method: 'POST',
+    body: JSON.stringify(contractData),
+  });
 };

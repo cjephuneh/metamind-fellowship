@@ -1,10 +1,11 @@
-
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import os
 import json
 from datetime import datetime, timedelta
 import uuid
+import hashlib
+import secrets
 
 app = Flask(__name__)
 CORS(app)
@@ -33,6 +34,20 @@ def load_data(filename, default=None):
 def save_data(filename, data):
     with open(os.path.join(DATA_DIR, filename), 'w') as f:
         json.dump(data, f, indent=2)
+
+# Hash password with salt
+def hash_password(password):
+    salt = secrets.token_hex(8)
+    hashed = hashlib.sha256((password + salt).encode()).hexdigest()
+    return f"{salt}:{hashed}"
+
+# Verify password
+def verify_password(stored_password, provided_password):
+    if not stored_password or ":" not in stored_password:
+        return False
+    salt, hashed = stored_password.split(":")
+    calculated_hash = hashlib.sha256((provided_password + salt).encode()).hexdigest()
+    return calculated_hash == hashed
 
 # Initialize data stores
 scholarships = load_data("scholarships.json", [
@@ -84,6 +99,7 @@ users = load_data("users.json", [
         "address": "0x1234567890abcdef1234567890abcdef12345678",
         "name": "John Doe",
         "email": "john@example.com",
+        "password": hash_password("password123"),
         "type": "student",
         "balance": "0.5",
         "created_at": (datetime.now() - timedelta(days=45)).isoformat()
@@ -93,6 +109,7 @@ users = load_data("users.json", [
         "address": "0xabcdef1234567890abcdef1234567890abcdef12",
         "name": "Tech Foundation",
         "email": "foundation@tech.org",
+        "password": hash_password("password456"),
         "type": "sponsor",
         "balance": "10.2",
         "created_at": (datetime.now() - timedelta(days=90)).isoformat()
@@ -134,11 +151,61 @@ applications = load_data("applications.json", [])
 
 transactions = load_data("transactions.json", [])
 
+# Smart contract records
+smart_contracts = load_data("smart_contracts.json", [
+    {
+        "id": str(uuid.uuid4()),
+        "contract_address": "0xfedcba9876543210fedcba9876543210fedcba98",
+        "title": "STEM Scholarship Fund",
+        "description": "Smart contract for distributing STEM scholarships based on achievement milestones",
+        "sponsor_address": "0xabcdef1234567890abcdef1234567890abcdef12",
+        "total_funds": "5.0",
+        "remaining_funds": "5.0",
+        "created_at": (datetime.now() - timedelta(days=30)).isoformat(),
+        "terms": {
+            "milestones": [
+                {"description": "Complete application", "percentage": 10},
+                {"description": "Submit project proposal", "percentage": 20},
+                {"description": "Mid-term progress report", "percentage": 30},
+                {"description": "Final project submission", "percentage": 40}
+            ],
+            "minimum_gpa": 3.0,
+            "deadline": (datetime.now() + timedelta(days=120)).isoformat()
+        }
+    }
+])
+
 # ----- API Routes -----
 
 @app.route('/')
 def home():
     return jsonify({"message": "MetaMind Fellowship API"})
+
+# Authentication Endpoints
+@app.route('/api/auth/login', methods=['POST'])
+def login():
+    data = request.json
+    if not data or not data.get("email") or not data.get("password"):
+        return jsonify({"error": "Email and password are required"}), 400
+    
+    email = data.get("email")
+    password = data.get("password")
+    
+    user = next((u for u in users if u["email"] == email), None)
+    if not user:
+        return jsonify({"error": "Invalid email or password"}), 401
+    
+    if not verify_password(user.get("password", ""), password):
+        return jsonify({"error": "Invalid email or password"}), 401
+    
+    # For security, don't return the password
+    user_without_password = {k: v for k, v in user.items() if k != "password"}
+    
+    return jsonify({
+        "success": True,
+        "user": user_without_password,
+        "token": str(uuid.uuid4())  # In a real app, this would be a proper JWT
+    })
 
 # Scholarships Endpoints
 @app.route('/api/scholarships', methods=['GET'])
@@ -176,24 +243,39 @@ def create_scholarship():
 # User Endpoints
 @app.route('/api/users/<address>', methods=['GET'])
 def get_user(address):
-    user = next((u for u in users if u["address"] == address), None)
+    # Can retrieve user by address or by email (for email/password login)
+    user = next((u for u in users if u["address"] == address or u["email"] == address), None)
     if user:
-        return jsonify(user)
+        # Don't return password
+        user_without_password = {k: v for k, v in user.items() if k != "password"}
+        return jsonify(user_without_password)
     return jsonify({"error": "User not found"}), 404
 
 @app.route('/api/users', methods=['POST'])
 def create_user():
     data = request.json
-    if not data or not data.get("address"):
-        return jsonify({"error": "Address is required"}), 400
+    if not data:
+        return jsonify({"error": "Invalid data"}), 400
+    
+    # Either address or email is required
+    if not data.get("address") and not data.get("email"):
+        return jsonify({"error": "Either address or email is required"}), 400
     
     # Check if user already exists
-    if any(u["address"] == data.get("address") for u in users):
-        return jsonify({"error": "User already exists"}), 409
+    if data.get("address") and any(u["address"] == data.get("address") for u in users):
+        return jsonify({"error": "User with this address already exists"}), 409
+    
+    if data.get("email") and any(u["email"] == data.get("email") for u in users):
+        return jsonify({"error": "User with this email already exists"}), 409
+    
+    # Hash password if provided
+    password_hash = None
+    if data.get("password"):
+        password_hash = hash_password(data.get("password"))
     
     new_user = {
         "id": str(uuid.uuid4()),
-        "address": data.get("address"),
+        "address": data.get("address", ""),
         "name": data.get("name", "Unnamed User"),
         "email": data.get("email", ""),
         "type": data.get("type", "student"),
@@ -201,9 +283,15 @@ def create_user():
         "created_at": datetime.now().isoformat()
     }
     
+    if password_hash:
+        new_user["password"] = password_hash
+    
     users.append(new_user)
     save_data("users.json", users)
-    return jsonify(new_user), 201
+    
+    # Don't return password in response
+    user_without_password = {k: v for k, v in new_user.items() if k != "password"}
+    return jsonify(user_without_password), 201
 
 @app.route('/api/users/<address>', methods=['PUT'])
 def update_user(address):
@@ -220,6 +308,40 @@ def update_user(address):
     
     save_data("users.json", users)
     return jsonify(user)
+
+# Smart Contract Endpoints
+@app.route('/api/contracts', methods=['GET'])
+def get_contracts():
+    return jsonify(smart_contracts)
+
+@app.route('/api/contracts/<contract_id>', methods=['GET'])
+def get_contract(contract_id):
+    contract = next((c for c in smart_contracts if c["id"] == contract_id), None)
+    if contract:
+        return jsonify(contract)
+    return jsonify({"error": "Contract not found"}), 404
+
+@app.route('/api/contracts', methods=['POST'])
+def create_contract():
+    data = request.json
+    if not data:
+        return jsonify({"error": "Invalid data"}), 400
+        
+    new_contract = {
+        "id": str(uuid.uuid4()),
+        "contract_address": data.get("contract_address"),
+        "title": data.get("title"),
+        "description": data.get("description"),
+        "sponsor_address": data.get("sponsor_address"),
+        "total_funds": data.get("total_funds", "0.0"),
+        "remaining_funds": data.get("remaining_funds", "0.0"),
+        "created_at": datetime.now().isoformat(),
+        "terms": data.get("terms", {})
+    }
+    
+    smart_contracts.append(new_contract)
+    save_data("smart_contracts.json", smart_contracts)
+    return jsonify(new_contract), 201
 
 # Messages Endpoints
 @app.route('/api/messages/<user_id>', methods=['GET'])

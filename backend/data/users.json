@@ -1,9 +1,11 @@
+
 [
   {
     "id": "64af86e8-3bbe-4f2f-b8a1-7c89cc41895b",
     "address": "0x1234567890abcdef1234567890abcdef12345678",
     "name": "John Doe",
     "email": "john@example.com",
+    "password": "hashed_password_123",
     "type": "student",
     "balance": "0.5",
     "created_at": "2025-01-29T03:48:15.465355"
@@ -13,6 +15,7 @@
     "address": "0xabcdef1234567890abcdef1234567890abcdef12",
     "name": "Tech Foundation",
     "email": "foundation@tech.org",
+    "password": "hashed_password_456",
     "type": "sponsor",
     "balance": "10.2",
     "created_at": "2024-12-15T03:48:15.465393"

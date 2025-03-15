@@ -11,6 +11,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import ConnectWallet from "./pages/ConnectWallet";
 import Register from "./pages/Register";
+import SignIn from "./pages/SignIn";
 import Dashboard from "./pages/Dashboard";
 import ScholarshipDetail from "./pages/ScholarshipDetail";
 
@@ -37,6 +38,7 @@ const App = () => {
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/connect" element={<ConnectWallet />} />
+              <Route path="/signin" element={<SignIn />} />
               <Route path="/register" element={<Register />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/scholarships/:id" element={<ScholarshipDetail />} />

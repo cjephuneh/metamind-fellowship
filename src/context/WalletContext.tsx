@@ -1,9 +1,13 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { loginWithEmailPassword, getUserByAddress, createUser } from "@/lib/api";
 
 type User = {
-  address: string;
+  id?: string;
+  address?: string;
+  name?: string;
+  email?: string;
   type?: "student" | "sponsor";
   balance?: string;
 };
@@ -12,6 +16,7 @@ interface WalletContextType {
   user: User | null;
   isConnecting: boolean;
   connectWallet: (type?: "student" | "sponsor") => Promise<boolean>;
+  emailPasswordSignIn: (email: string, password: string) => Promise<boolean>;
   disconnectWallet: () => void;
   sendTransaction: (amount: string, recipient: string) => Promise<boolean>;
   refreshBalance: () => Promise<void>;
@@ -30,47 +35,53 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const checkConnection = async () => {
-      try {
-        if (typeof window.ethereum !== 'undefined') {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        const parsedUser = JSON.parse(storedUser);
+        
+        if (parsedUser.address && typeof window.ethereum !== 'undefined') {
           const accounts = await window.ethereum.request({ method: 'eth_accounts' });
           
-          if (accounts && accounts.length > 0) {
-            const userData = localStorage.getItem('user');
-            if (userData) {
-              const parsedUser = JSON.parse(userData);
-              
-              if (parsedUser.address.toLowerCase() === accounts[0].toLowerCase()) {
-                const balance = await window.ethereum.request({
-                  method: 'eth_getBalance',
-                  params: [accounts[0], 'latest'],
-                });
-                
-                const balanceInEth = (parseInt(balance, 16) / 1e18).toFixed(4);
-                
-                setUser({
-                  ...parsedUser,
-                  balance: balanceInEth
-                });
-              } else {
-                localStorage.removeItem('user');
-              }
-            } else {
-              const balance = await window.ethereum.request({
-                method: 'eth_getBalance',
-                params: [accounts[0], 'latest'],
-              });
-              
-              const balanceInEth = (parseInt(balance, 16) / 1e18).toFixed(4);
-              
-              setUser({
-                address: accounts[0],
-                balance: balanceInEth
-              });
-            }
+          if (accounts && accounts.length > 0 && parsedUser.address.toLowerCase() === accounts[0].toLowerCase()) {
+            const balance = await window.ethereum.request({
+              method: 'eth_getBalance',
+              params: [accounts[0], 'latest'],
+            });
+            
+            const balanceInEth = (parseInt(balance, 16) / 1e18).toFixed(4);
+            
+            setUser({
+              ...parsedUser,
+              balance: balanceInEth
+            });
+            return;
           }
+        } 
+        
+        if (parsedUser.email) {
+          setUser(parsedUser);
+          return;
         }
-      } catch (error) {
-        console.error("Error checking wallet connection:", error);
+        
+        localStorage.removeItem('user');
+      }
+      
+      if (typeof window.ethereum !== 'undefined') {
+        const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+        
+        if (accounts && accounts.length > 0) {
+          const balance = await window.ethereum.request({
+            method: 'eth_getBalance',
+            params: [accounts[0], 'latest'],
+          });
+          
+          const balanceInEth = (parseInt(balance, 16) / 1e18).toFixed(4);
+          
+          setUser({
+            address: accounts[0],
+            balance: balanceInEth
+          });
+        }
       }
     };
 
@@ -179,11 +190,43 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const emailPasswordSignIn = async (email: string, password: string): Promise<boolean> => {
+    setIsConnecting(true);
+    
+    try {
+      const response = await loginWithEmailPassword(email, password);
+      
+      if (response.success) {
+        const userData = response.user;
+        setUser(userData);
+        localStorage.setItem('user', JSON.stringify(userData));
+        
+        toast({
+          title: "Signed In!",
+          description: `Welcome back, ${userData.name || 'User'}!`,
+        });
+        
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("Error signing in:", error);
+      toast({
+        variant: "destructive",
+        title: "Sign In Failed",
+        description: "Invalid email or password. Please try again.",
+      });
+      return false;
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+
   const disconnectWallet = () => {
     setUser(null);
     localStorage.removeItem('user');
     toast({
-      title: "Wallet Disconnected",
+      title: "Signed Out",
       description: "You have been logged out successfully.",
     });
     navigate('/');
@@ -264,6 +307,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       user,
       isConnecting,
       connectWallet,
+      emailPasswordSignIn,
       disconnectWallet,
       sendTransaction,
       refreshBalance,
