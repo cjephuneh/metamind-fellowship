@@ -41,8 +41,8 @@ const ApplyForGrantModal = ({ isOpen, onClose, scholarship }: ApplyForGrantModal
     setIsSubmitting(true);
     
     try {
-      // Using user.address as applicantId if user.id is not available
-      const applicantId = user.id || user.address;
+      // Always use user.address as applicantId since user.id is not guaranteed to exist
+      const applicantId = user.address;
       
       await submitApplication({
         scholarshipId: scholarship.id,

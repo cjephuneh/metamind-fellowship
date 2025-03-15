@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -49,7 +48,6 @@ const ScholarshipCard = ({ scholarship, userType, onApply }: ScholarshipProps) =
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
   
-  // Calculate days remaining until deadline
   const calculateDaysRemaining = (deadlineString: string) => {
     const today = new Date();
     const deadline = new Date(deadlineString);
@@ -171,8 +169,10 @@ const ScholarshipCard = ({ scholarship, userType, onApply }: ScholarshipProps) =
         <ApplyForGrantModal
           isOpen={showApplyModal}
           onClose={handleCloseModal}
-          scholarshipTitle={scholarship.title}
-          scholarshipId={scholarship.id}
+          scholarship={{
+            id: scholarship.id,
+            title: scholarship.title
+          }}
         />
       )}
     </>
