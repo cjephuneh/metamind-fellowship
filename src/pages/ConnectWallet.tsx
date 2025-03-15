@@ -11,6 +11,9 @@ import {
 } from "@dynamic-labs/sdk-react-core";
 import { EthereumWalletConnectors } from "@dynamic-labs/ethereum";
 
+// Define environment ID - this helps avoid reliance on process.env
+const DYNAMIC_ENVIRONMENT_ID = "fda698ee-d8ca-4c73-ac3c-f86687fea53c";
+
 const ConnectWallet = () => {
   const { connectWallet, isConnecting } = useWallet();
   const navigate = useNavigate();
@@ -40,7 +43,7 @@ const ConnectWallet = () => {
       <div className="flex-1 flex items-center justify-center px-4">
         <DynamicContextProvider
           settings={{
-            environmentId: "fda698ee-d8ca-4c73-ac3c-f86687fea53c",
+            environmentId: DYNAMIC_ENVIRONMENT_ID,
             walletConnectors: [EthereumWalletConnectors],
           }}
         >
