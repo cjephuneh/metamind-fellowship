@@ -21,7 +21,7 @@ export function MainNavigation() {
   return (
     <div className="flex justify-between items-center py-4">
       <Link to="/" className="text-2xl font-bold text-purple-600">
-        EduChain
+        EduLink
       </Link>
       
       <NavigationMenu>
