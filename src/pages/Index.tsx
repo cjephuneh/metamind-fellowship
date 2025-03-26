@@ -20,7 +20,7 @@ const Index = () => {
               Empowering Education through Blockchain
             </h1>
             <p className="text-xl md:text-2xl text-gray-600 mb-10 max-w-3xl mx-auto">
-              EduChain connects students with sponsors through smart contract scholarships, enabling transparent and direct funding for educational opportunities.
+              EduLink connects students with sponsors through smart contract scholarships, enabling transparent and direct funding for educational opportunities.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/connect">
